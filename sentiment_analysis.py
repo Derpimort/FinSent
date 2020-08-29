@@ -10,9 +10,10 @@ from nltk.tokenize import sent_tokenize
 from finbert.utils import *
 
 DATA_DIR="data/"
-MODEL_DIR="finBERT/models/sentiment/base"
+MODEL_DIR="finbert/models/sentiment/base"
+BATCH_SIZE=5
 
-def get_sentiment(text, model, write_to_csv=False, path=None):
+def get_sentiment(text, model, tokenizer=None, write_to_csv=False, path=None):
     """
     Predict sentiments of sentences in a given text. The function first tokenizes sentences, make predictions and write
     results.
@@ -27,16 +28,17 @@ def get_sentiment(text, model, write_to_csv=False, path=None):
     path (optional): string
         path to write the string
     """
+    print(text)
     model.eval()
-    
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-    sentences = sent_tokenize(text)
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased') if tokenizer is None else tokenizer
+
+    sentences = sent_tokenize(text) if isinstance(text, str) else text
 
     label_list = ['positive', 'negative', 'neutral']
     label_dict = {0: 'positive', 1: 'negative', 2: 'neutral'}
     result = pd.DataFrame(columns=['sentence','logit','prediction','sentiment_score'])
-    for batch in chunks(sentences, 5):
+    for batch in chunks(sentences, BATCH_SIZE):
 
         examples = [InputExample(str(i), sentence) for i, sentence in enumerate(batch)]
 
