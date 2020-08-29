@@ -34,23 +34,25 @@ class Stock:
         self.yearly_recommendations = (recommendations.loc[pd.to_datetime('today') - 
                                         pd.DateOffset(years=1):]['To Grade']
                                         .value_counts(normalize=True) * 100).to_dict()
+    
+    def write_csv(self, fname, articles=None):
+        if articles is None:
+            self.sentiment.to_csv(fname, index=False)
+        else:
+            articles.join(self.sentiment[['prediction', 'sentiment_score']]).to_csv(fname, index=False)
 
     def getStockData(self, period="1y"):
         return self.ticker.history(period=period)
 
-    def getSentiment(self, dataframe=True):
-        sentiment_dict={'negative':0,
+    def getSentiment(self):
+        sentiment_dict={'Symbol':self.symbol,
+                        'negative':0,
                         'neutral':0,
-                        'positive':0}
+                        'positive':0,
+                        'avg_sentiment_score':self.avg_score}
         sentiment_dict.update((self.sentiment['prediction'].value_counts(normalize=True) * 100).to_dict())
-
-        if dataframe:
-            df = pd.DataFrame(sentiment_dict.items())
-            df.columns = ['Sentiment', 'percentage']
-            df['Articles']=''
-            return df, self.avg_score
             
-        return sentiment_dict, self.avg_score
+        return sentiment_dict
 
     def __str__(self):
         return  "\n".join([

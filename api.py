@@ -8,10 +8,14 @@ class Api(NewsApiClient):
 
         super().__init__(api_key=apikey)
     
-    def get_topn(self, query):
-        top_headlines = super().get_everything(q=query, language='en', sort_by="publishedAt")
+    def get_topn(self, keywords, date):
+        query = " OR ".join(keywords.split(","))
+        top_news = super().get_everything(q=query,
+                        from_param=date,
+                        to=date,
+                        sort_by='relevancy',
+                        page_size=100)
 
-        assert top_headlines['status']=='ok', "Error, fetching news from api"
+        assert top_news['status']=='ok', "Error, fetching news from api"
 
-        for article in top_headlines['articles']:
-            yield article['title']
+        return top_news['articles']

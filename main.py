@@ -3,6 +3,7 @@ import numpy as np
 import string
 import random
 import pandas as pd
+from tqdm import tqdm
 
 from api import Api
 from stock import Stock
@@ -15,28 +16,49 @@ from pytorch_pretrained_bert.tokenization import BertTokenizer
 
 DATA_DIR="data/"
 
+def create_dirs(df, data_dir):
+    for symbol in df['Symbol']:
+        dirname = os.path.join(data_dir, symbol)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
 
-def main(stonks, MODEL_DIR="finbert/models/sentiment/base"):
+
+
+def main(stonks, data_dir, MODEL_DIR="finbert/models/sentiment/base"):
+    create_dirs(df, data_dir)
+    date = str(pd.to_datetime('today').date())
     model = BertForSequenceClassification.from_pretrained(MODEL_DIR, num_labels=3, cache_dir=None)
     api = Api("newsapi.key")
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-    """ Improves processing speed, uncomment if processing alot of stocks """
-    # tickers = yf.Tickers(" ".join(stonks['Symbol'].values)).tickers
-    # result = pd.DataFrame(columns=['stock', 'predictions', 'avg_sentiment_score', 'last_month_recomms', 'last_year_recomms', 'monthly_tick'])
-
-    for symbol, name in stonks.values:
-        stock = Stock(symbol, name, get_sentiment(list(api.get_topn(name)), model, tokenizer))
-        # stock.setTicker(getattr(tickers, symbol)) # See comment on tickers above
+    result = []
+    not_processed = []
+    print("Started")
+    for index, (symbol, name, keywords) in tqdm(df[['Symbol', 'Company Name', 'keywords']].iterrows()):
         try:
-            stock.setRecommendations(getattr(tickers, symbol).recommendations)
+            articles = pd.DataFrame(api.get_topn(keywords, date))[['title', 'description', 'url', 'publishedAt']]
+            sentences = (articles['title'] + ". " + articles['description']).values
+            stock = Stock(symbol, name, get_sentiment(sentences, model, tokenizer))
+            stock.write_csv(os.path.join(data_dir,"%s/%s.csv"%(symbol,date)), articles)
+            result.append(stock.getSentiment())
         except Exception as e:
-            pass
-        yield stock
+            not_processed.append(symbol)
+
+    if len(not_processed)>0:
+        print("Following stocks not processed due to no articles or errors")
+        for i in not_processed:
+            print(i)
+    print("Writing results to", os.path.join(data_dir, "%s.csv"%date))
+    result_df = pd.DataFrame(result)
+    result_df.to_csv(os.path.join(data_dir, "%s.csv"%date), index=False)
+
 
 
 if __name__=="__main__":
-    nasdaq = pd.read_csv(DATA_DIR+"NASDAQ.csv")
-    selected_stocks = nasdaq[:10]
-    for stock in main(selected_stocks):
-        print(stock)
+    stonks = pd.read_csv(DATA_DIR+"ind_nifty500list.csv")
+    keywords = pd.read_csv(DATA_DIR+"keywords.csv")
+    df = stonks.merge(keywords, on='Symbol')
+
+    selected_stocks=["ADANIPOWER", "TCS", "RELIANCE"]
+    df = df[df['Symbol'].isin(selected_stocks)]
+    main(df, os.path.join(DATA_DIR,"Stonks/"))
