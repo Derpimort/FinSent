@@ -13,8 +13,7 @@ import yfinance as yf
 
 from pytorch_pretrained_bert.modeling import BertForSequenceClassification
 from pytorch_pretrained_bert.tokenization import BertTokenizer
-
-DATA_DIR="data/"
+from constants import DATA_DIR, MODEL_DIR
 
 def create_dirs(df, data_dir):
     for symbol in df['Symbol']:
@@ -26,7 +25,7 @@ def create_dirs(df, data_dir):
 
 
 
-def main(stonks, data_dir, MODEL_DIR="finbert/models/sentiment/base", date=None):
+def main(stonks, data_dir, MODEL_DIR=MODEL_DIR, date=None):
     create_dirs(df, data_dir)
     date = str(pd.to_datetime('today').date()) if not date else date
     model = BertForSequenceClassification.from_pretrained(MODEL_DIR, num_labels=3, cache_dir=None)
@@ -64,6 +63,11 @@ if __name__=="__main__":
     keywords = pd.read_csv(DATA_DIR+"keywords.csv")
     df = stonks.merge(keywords, on='Symbol')
 
+    date = input("Enter date(YYYY-MM-DD), leave empty if today: ")
+    date = None if date=="" else date
+
+    ## Comment the following two lines to process all stocks instead of just select 3
     selected_stocks=["ADANIPOWER", "TCS", "RELIANCE"]
     df = df[df['Symbol'].isin(selected_stocks)]
-    main(df, os.path.join(DATA_DIR,"Stonks/"))
+
+    main(df, os.path.join(DATA_DIR,"Stonks/"), date=date)

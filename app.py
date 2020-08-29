@@ -113,6 +113,7 @@ def get_graphs(symbol, name):
     name = stock['Company Name']
     
     data_df = pd.read_csv(os.path.join(STOCKS_DIR, "%s/full.csv"%symbol))
+    data_df = data_df.sort_values('Date')
     latest = data_df.iloc[-1]
     latest_df = pd.read_csv(os.path.join(STOCKS_DIR, "%s/%s.csv"%(symbol,latest['Date'])))
     stock = Stock(symbol, name, sentiment=latest_df, ticker=True)
