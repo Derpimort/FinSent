@@ -21,12 +21,13 @@ def main(stonks, MODEL_DIR="finbert/models/sentiment/base"):
     api = Api("newsapi.key")
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-    tickers = yf.Tickers(" ".join(stonks['Symbol'].values)).tickers
+    """ Improves processing speed, uncomment if processing alot of stocks """
+    # tickers = yf.Tickers(" ".join(stonks['Symbol'].values)).tickers
     # result = pd.DataFrame(columns=['stock', 'predictions', 'avg_sentiment_score', 'last_month_recomms', 'last_year_recomms', 'monthly_tick'])
 
     for symbol, name in stonks.values:
         stock = Stock(symbol, name, get_sentiment(list(api.get_topn(name)), model, tokenizer))
-        stock.setTicker(getattr(tickers, symbol))
+        # stock.setTicker(getattr(tickers, symbol)) # See comment on tickers above
         try:
             stock.setRecommendations(getattr(tickers, symbol).recommendations)
         except Exception as e:

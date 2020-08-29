@@ -28,7 +28,7 @@ def get_sentiment(text, model, tokenizer=None, write_to_csv=False, path=None):
     path (optional): string
         path to write the string
     """
-    print(text)
+    # print(text)
     model.eval()
 
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased') if tokenizer is None else tokenizer
