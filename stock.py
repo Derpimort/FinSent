@@ -39,14 +39,18 @@ class Stock:
         return self.ticker.history(period=period)
 
     def getSentiment(self, dataframe=True):
+        sentiment_dict={'negative':0,
+                        'neutral':0,
+                        'positive':0}
+        sentiment_dict.update((self.sentiment['prediction'].value_counts(normalize=True) * 100).to_dict())
+
         if dataframe:
-            df = pd.DataFrame(self.sentiment['prediction'].value_counts(normalize=True) * 100).reset_index()
+            df = pd.DataFrame(sentiment_dict.items())
             df.columns = ['Sentiment', 'percentage']
             df['Articles']=''
             return df, self.avg_score
-        else:
-            sentiment_dict = (self.sentiment['prediction'].value_counts(normalize=True) * 100).to_dict()
-            return sentiment_dict, self.avg_score
+            
+        return sentiment_dict, self.avg_score
 
     def __str__(self):
         return  "\n".join([

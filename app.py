@@ -104,7 +104,7 @@ def sentiment_graph(sentiment_df):
         color='Sentiment', 
         orientation='h', 
         hover_data=['Sentiment', 'percentage'],
-        # color_discrete_sequence=["#55a868", "#ccb974", "#c44e52"],
+        color_discrete_sequence=["#c44e52", "#f4e08a", "#55a868"],
         height=240)
     return fig
 
@@ -122,7 +122,8 @@ def avg_sentiment_graph(avg_sentiment):
                     {'range': [-1, -0.3], 'color': "#ff9f9b"},
                     {'range': [-0.3, 0.3], 'color': "#fffea3"},
                     {'range': [0.3, 1], 'color': "#8de5a1"}],
-                'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 490}}))
+                #'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 490}
+                }))
     reference_score = avg_sentiment
     return fig
 

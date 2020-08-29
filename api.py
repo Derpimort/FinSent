@@ -9,7 +9,7 @@ class Api(NewsApiClient):
         super().__init__(api_key=apikey)
     
     def get_topn(self, query):
-        top_headlines = super().get_everything(qintitle=query, language='en', sort_by="publishedAt")
+        top_headlines = super().get_everything(q=query, language='en', sort_by="publishedAt")
 
         assert top_headlines['status']=='ok', "Error, fetching news from api"
 
