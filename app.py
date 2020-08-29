@@ -41,7 +41,8 @@ app.layout = html.Div(children=[
             ),
             html.H3(id='stock_name_header'),
             html.P(id='stock_name_details'),
-            dcc.Graph(id='stock_sentiment_bargraph')
+            dcc.Graph(id='stock_sentiment_bargraph'),
+            dcc.Graph(id='stock_sentiment_guage')
         ], className="six columns"),
 
         html.Div([
@@ -53,6 +54,7 @@ app.layout = html.Div(children=[
 @app.callback(
     [Output('stock_data_graph', 'figure'),
     Output('stock_sentiment_bargraph', 'figure'),
+    Output('stock_sentiment_guage', 'figure'),
     Output('stock_name_header', 'children'),
     Output('stock_name_details', 'children'),],
     [Input('select_stock', 'value')]
@@ -67,8 +69,9 @@ def update(symbol):
 
     stock_fig = stock_graph(df, symbol)
     sentiment_fig = sentiment_graph(sentiment_df)
+    avg_sentiment_fig = avg_sentiment_graph(avg_sentiment)
 
-    return stock_fig, sentiment_fig, symbol, name
+    return stock_fig, sentiment_fig, avg_sentiment_fig, symbol, name
 
 def stock_graph(df, symbol):
     fig = px.line(df, y=['Open', 'High', 'Low', 'Close'], title='%s stock'%symbol, hover_data=['Volume', 'Dividends', 'Stock Splits'])
@@ -99,7 +102,22 @@ def sentiment_graph(sentiment_df):
         height=240)
     return fig
 
+def avg_sentiment_graph(avg_sentiment):
+    fig = go.Figure(go.Indicator(
+        domain = {'x': [0, 1], 'y': [0, 1]},
+        value = avg_sentiment,
+        mode = "gauge+number+delta",
+        title = {'text': "Avearge Sentiment Score"},
+        delta = {'reference': 0},
+        gauge = {'axis': {'range': [-1, 1]},
+                'bar': {'color': "#4878d0"},
+                'steps' : [
+                    {'range': [-1, -0.3], 'color': "#ff9f9b"},
+                    {'range': [-0.3, 0.3], 'color': "#fffea3"},
+                    {'range': [0.3, 1], 'color': "#8de5a1"}],
+                'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 490}}))
 
+    return fig
 
 if __name__ == '__main__':
     app.run_server(debug=True)
