@@ -137,4 +137,4 @@ def update_graphs(rows, derived_virtual_selected_rows):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8051)
+    app.run_server(host='0.0.0.0', debug=True, port=8051)
