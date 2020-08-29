@@ -42,7 +42,7 @@ def get_sentiment(text, model, tokenizer=None, write_to_csv=False, path=None):
 
         examples = [InputExample(str(i), sentence) for i, sentence in enumerate(batch)]
 
-        features = convert_examples_to_features(examples, label_list, 64, tokenizer)
+        features = convert_examples_to_features(examples, label_list, 64, tokenizer, verbose=False)
 
         all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
         all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)

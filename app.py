@@ -1,7 +1,7 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
@@ -20,6 +20,7 @@ model = BertForSequenceClassification.from_pretrained(MODEL_DIR, num_labels=3, c
 api = Api("newsapi.key")
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 reference_score = 0
+button_clicks = 0
 
 stocks = pd.read_csv(DATA_DIR+"stocks.csv")
 
@@ -31,16 +32,36 @@ app.layout = html.Div(children=[
     html.H1(children='Financial sentiment analysis'),
 
     html.P(children='''
-        Analyze stock news sentiment with FinBERT.
+        Analyze news sentiment with FinBERT.
     '''),
     html.Div([
         html.Div([
-            dcc.Dropdown(
+            html.Div([
+                html.H5("Select stock"),
+                dcc.Dropdown(
                 id='select_stock',
                 options=[{'label': name, 'value': sym} for sym, name in stocks.values],
                 value='GOOGL'
             )
-        ], className="six columns")
+            ]),
+        ], className="three columns"),
+        html.Div([
+            html.Br(),
+            html.P("---OR---")
+        ], className="one columns"),
+        html.Div([
+            html.H5("Stock symbol"),
+            dcc.Input(id="stock_symbol_input", value="GOOGL", type="text")
+            ], className="two columns"),
+        html.Div([
+            html.H5("News search term"),
+            dcc.Input(id="stock_search_input", value="Alphabet Inc", type="text")
+            ], className="two columns offset-by-one column"),
+        html.Div([
+            html.Button("Search", id="stock_search_submit", n_clicks=0),
+            html.P("* Note: add .BO or .NS at the end of stock to get Indian stocks")
+        ], className="two columns offset-by-one column")
+
     ], className="row"),
     html.Div([
         html.Div([
@@ -62,13 +83,28 @@ app.layout = html.Div(children=[
     Output('stock_sentiment_bargraph', 'figure'),
     Output('stock_sentiment_guage', 'figure'),
     Output('stock_name_header', 'children'),
-    Output('stock_name_details', 'children'),],
-    [Input('select_stock', 'value')]
+    Output('stock_name_details', 'children')],
+    [Input('stock_search_submit', 'n_clicks'),
+    Input('select_stock', 'value'),
+    State('stock_symbol_input', 'value'),
+    State('stock_search_input', 'value')]
 )
-def update(symbol):
-    symbol = 'GOOGL' if not symbol else symbol
-    name = stocks[stocks['Symbol']==symbol]['Name'].iloc[0]
+def update(n_clicks, dropdown, sym_input, searchq):
+    global button_clicks #Probably bad practice but it'll do for now
+    symbol=""
+    name=""
+    
+    if n_clicks != button_clicks:
+        symbol = sym_input
+        name = searchq
+        button_clicks = n_clicks
+    else:
+        symbol = 'GOOGL' if not dropdown else dropdown
+        name = stocks[stocks['Symbol']==symbol]['Name'].iloc[0]
 
+    return get_graphs(symbol, name)
+
+def get_graphs(symbol, name):
     stock = Stock(symbol, name, get_sentiment(list(api.get_topn(name)), model, tokenizer))
     df = stock.getStockData()
     sentiment_df, avg_sentiment = stock.getSentiment()
@@ -80,7 +116,7 @@ def update(symbol):
     return stock_fig, sentiment_fig, avg_sentiment_fig, symbol, name
 
 def stock_graph(df, symbol):
-    fig = px.line(df, y=['Open', 'High', 'Low', 'Close'], title='%s stock'%symbol, hover_data=['Volume', 'Dividends', 'Stock Splits'])
+    fig = px.line(df, y=['Open', 'High', 'Low', 'Close'], title='%s stock'%symbol, hover_data=['Volume'])
 
     fig.update_xaxes(
         rangeslider_visible=True,
@@ -125,6 +161,7 @@ def avg_sentiment_graph(avg_sentiment):
                 #'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 490}
                 }))
     reference_score = avg_sentiment
+
     return fig
 
 if __name__ == '__main__':

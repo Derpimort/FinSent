@@ -110,7 +110,7 @@ class FinSentProcessor(DataProcessor):
         return examples
 
 
-def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer, mode='classification'):
+def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer, mode='classification', verbose=False):
     """
     Loads a data file into a list of InputBatch's. With this function, the InputExample's are converted to features
     that can be used for the model. Text is tokenized, converted to ids and zero-padded. Labels are mapped to integers.
@@ -177,7 +177,7 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
         except:
             agree = 0
 
-        if ex_index < 1:
+        if ex_index < 1 and verbose:
             logger.info("*** Example ***")
             logger.info("guid: %s" % (example.guid))
             logger.info("tokens: %s" % " ".join(
