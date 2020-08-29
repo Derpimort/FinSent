@@ -12,7 +12,7 @@ from constants import DATA_DIR
 date = pd.to_datetime('today')
 csv_path=DATA_DIR+"Stonks/%s.csv"%date.date()
 while not os.path.exists(csv_path):
-    inp=input("Data not found for %s use data from previous date[y/n]?")
+    inp=input("Data not found for %s use data from previous date[y/n]?"%date.date())
     if inp=="y":
         date = date - pd.DateOffset(days=1)
         csv_path=DATA_DIR+"Stonks/%s.csv"%date.date()
@@ -24,7 +24,7 @@ df = pd.read_csv(csv_path)
 date = date - pd.DateOffset(days=1)
 csv_path=DATA_DIR+"Stonks/%s.csv"%date.date()
 while not os.path.exists(csv_path):
-    inp = input("Data not found for %s use data from previous date[y/n]?")
+    inp = input("Data not found for %s use data from previous date[y/n]?"%date.date())
     if inp=="y":
         date = date - pd.DateOffset(days=1)
         csv_path = DATA_DIR+"Stonks/%s.csv"%date.date()

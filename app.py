@@ -105,7 +105,7 @@ def update(n_clicks, dropdown, sym_input, searchq):
 
 def get_graphs(symbol, name):
     stock = None
-    if symbol is not None:
+    if symbol is not None and symbol != "":
         stock = stocks[stocks['Symbol'].str.contains(symbol)].iloc[0]
     else:
         stock = stocks[stocks['Company Name'].str.contains(name)].iloc[0]
@@ -115,23 +115,20 @@ def get_graphs(symbol, name):
     data_df = pd.read_csv(os.path.join(STOCKS_DIR, "%s/full.csv"%symbol))
     latest = data_df.iloc[-1]
     latest_df = pd.read_csv(os.path.join(STOCKS_DIR, "%s/%s.csv"%(symbol,latest['Date'])))
-    print(latest_df)
     stock = Stock(symbol, name, sentiment=latest_df, ticker=True)
-    print("Passed")
     df = stock.getStockData()
-    print("Passed")
     sentiments = stock.getSentiment()
-    print("Passed")
     stock_fig = stock_graph(df, symbol, data_df)
     avg_sentiment_fig = avg_sentiment_graph(stock.avg_score, data_df.iloc[-2]['Score'])
 
     return stock_fig, avg_sentiment_fig, latest_df.drop('description', axis=1).to_dict('records')
 
 def stock_graph(df, symbol, data_df):
-    x=data_df['Date']
-
-    df = df.loc[x]
-
+    data_df['Date'] = pd.to_datetime(data_df['Date'])
+    data_df = data_df.join(df['Close'], on='Date')
+    x = data_df['Date'].dt.date
+    #df = df[df.index.isin(x)]
+    # x =
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
     fig.add_trace(go.Scatter(
@@ -157,9 +154,10 @@ def stock_graph(df, symbol, data_df):
         name='negative'
     ), secondary_y=False)
 
-    fig.add_trace(go.Scatter(x=x, y=df['Close'],
-                        mode='lines',
-                        name='Close'), secondary_y=True)
+    fig.add_trace(go.Scatter(x=x, y=data_df['Close'],
+                        mode='lines+markers',
+                        name='Close',
+                        connectgaps=True), secondary_y=True)
 
     fig.update_layout(
         showlegend=True,
