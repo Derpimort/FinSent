@@ -19,6 +19,7 @@ MODEL_DIR = "finbert/models/sentiment/base"
 model = BertForSequenceClassification.from_pretrained(MODEL_DIR, num_labels=3, cache_dir=None)
 api = Api("newsapi.key")
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+reference_score = 0
 
 stocks = pd.read_csv(DATA_DIR+"stocks.csv")
 
@@ -38,17 +39,22 @@ app.layout = html.Div(children=[
                 id='select_stock',
                 options=[{'label': name, 'value': sym} for sym, name in stocks.values],
                 value='GOOGL'
-            ),
+            )
+        ], className="six columns")
+    ], className="row"),
+    html.Div([
+        html.Div([
             html.H3(id='stock_name_header'),
             html.P(id='stock_name_details'),
-            dcc.Graph(id='stock_sentiment_bargraph'),
-            dcc.Graph(id='stock_sentiment_guage')
+            dcc.Graph(id='stock_sentiment_bargraph')
         ], className="six columns"),
-
         html.Div([
-            dcc.Graph(id='stock_data_graph')
+            dcc.Graph(id='stock_sentiment_guage'),
         ], className="six columns"),
     ], className="row"),
+    html.Div([
+        dcc.Graph(id='stock_data_graph')
+    ])
 ])
 
 @app.callback(
@@ -103,12 +109,13 @@ def sentiment_graph(sentiment_df):
     return fig
 
 def avg_sentiment_graph(avg_sentiment):
+    global reference_score
     fig = go.Figure(go.Indicator(
         domain = {'x': [0, 1], 'y': [0, 1]},
         value = avg_sentiment,
         mode = "gauge+number+delta",
-        title = {'text': "Avearge Sentiment Score"},
-        delta = {'reference': 0},
+        title = {'text': "Average Sentiment Score"},
+        delta = {'reference': reference_score},
         gauge = {'axis': {'range': [-1, 1]},
                 'bar': {'color': "#4878d0"},
                 'steps' : [
@@ -116,7 +123,7 @@ def avg_sentiment_graph(avg_sentiment):
                     {'range': [-0.3, 0.3], 'color': "#fffea3"},
                     {'range': [0.3, 1], 'color': "#8de5a1"}],
                 'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 490}}))
-
+    reference_score = avg_sentiment
     return fig
 
 if __name__ == '__main__':
