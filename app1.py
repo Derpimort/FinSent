@@ -131,7 +131,7 @@ def update_graphs(rows, derived_virtual_selected_rows):
         # check if column exists - user may have deleted it
         # If `column.deletable=False`, then you don't
         # need to do this check.
-        for column in ["negative", "neutral", "positive", "articles", "avg_sentiment_score", 'delta'] if column in dff
+        for column in ["negative", "neutral", "positive", "articles", "avg_sentiment_score_x", 'delta'] if column in dff
     ]
 
 

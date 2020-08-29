@@ -11,13 +11,14 @@ class Stock:
     yearly_recommendations=None
     
 
-    def __init__(self, symbol, name, sentiment=None):
+    def __init__(self, symbol, name, sentiment=None, ticker=False):
         # Will inherit from yfinance Ticker later for efficient usage... might not need to though.
         self.symbol = symbol
         self.name = name
         if sentiment is not None:
             self.setSentiment(sentiment)
-        self.ticker = yf.Ticker(symbol)
+        if ticker:
+            self.ticker = yf.Ticker(symbol+".NS")
         
     
     def setSentiment(self, sentiment):

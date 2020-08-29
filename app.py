@@ -1,28 +1,23 @@
+import os
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_table
 from dash.dependencies import Input, Output, State
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import pandas as pd
 
-import yfinance as yf
-from api import Api
 from stock import Stock
-from sentiment_analysis import get_sentiment
 
-from pytorch_pretrained_bert.modeling import BertForSequenceClassification
-from pytorch_pretrained_bert.tokenization import BertTokenizer
 
 DATA_DIR = "data/"
-MODEL_DIR = "finbert/models/sentiment/base"
-model = BertForSequenceClassification.from_pretrained(MODEL_DIR, num_labels=3, cache_dir=None)
-api = Api("newsapi.key")
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-reference_score = 0
+STOCKS_DIR = os.path.join(DATA_DIR,"Stonks/")
+
 button_clicks = 0
 
-stocks = pd.read_csv(DATA_DIR+"stocks.csv")
+stocks = pd.read_csv(DATA_DIR+"ind_nifty500list.csv")[['Symbol', 'Company Name']]
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -41,7 +36,7 @@ app.layout = html.Div(children=[
                 dcc.Dropdown(
                 id='select_stock',
                 options=[{'label': name, 'value': sym} for sym, name in stocks.values],
-                value='GOOGL'
+                value='RELIANCE'
             )
             ]),
         ], className="three columns"),
@@ -51,39 +46,43 @@ app.layout = html.Div(children=[
         ], className="one columns"),
         html.Div([
             html.H5("Stock symbol"),
-            dcc.Input(id="stock_symbol_input", value="GOOGL", type="text")
+            dcc.Input(id="stock_symbol_input", value="RELIANCE", type="text")
             ], className="two columns"),
         html.Div([
             html.H5("News search term"),
-            dcc.Input(id="stock_search_input", value="Alphabet Inc", type="text")
+            dcc.Input(id="stock_search_input", value="Reliance Industries", type="text")
             ], className="two columns offset-by-one column"),
         html.Div([
             html.Button("Search", id="stock_search_submit", n_clicks=0),
-            html.P("* Note: add .BO or .NS at the end of stock to get Indian stocks")
+            html.P("")
         ], className="two columns offset-by-one column")
 
     ], className="row"),
     html.Div([
         html.Div([
-            html.H3(id='stock_name_header'),
-            html.P(id='stock_name_details'),
-            dcc.Graph(id='stock_sentiment_bargraph')
-        ], className="six columns"),
+            dcc.Graph(id='stock_data_graph')
+        ], className="eight columns"),
         html.Div([
             dcc.Graph(id='stock_sentiment_guage'),
-        ], className="six columns"),
+        ], className="four columns"),
     ], className="row"),
-    html.Div([
-        dcc.Graph(id='stock_data_graph')
-    ])
+    dash_table.DataTable(
+        id='stock_data_table',
+        style_cell={
+        # all three widths are needed
+        'minWidth': '180px', 'width': '180px', 'maxWidth': '180px',
+        'height': 'auto',
+        'whiteSpace': 'normal'
+    },
+        columns = [{"name": i, "id": i} for i in ['title', 'url', 'publishedAt', 'prediction',
+       'sentiment_score']]
+    )
 ])
 
 @app.callback(
     [Output('stock_data_graph', 'figure'),
-    Output('stock_sentiment_bargraph', 'figure'),
     Output('stock_sentiment_guage', 'figure'),
-    Output('stock_name_header', 'children'),
-    Output('stock_name_details', 'children')],
+    Output('stock_data_table', 'data')],
     [Input('stock_search_submit', 'n_clicks'),
     Input('select_stock', 'value'),
     State('stock_symbol_input', 'value'),
@@ -99,24 +98,76 @@ def update(n_clicks, dropdown, sym_input, searchq):
         name = searchq
         button_clicks = n_clicks
     else:
-        symbol = 'GOOGL' if not dropdown else dropdown
-        name = stocks[stocks['Symbol']==symbol]['Name'].iloc[0]
+        symbol = 'RELIANCE' if not dropdown else dropdown
+        name = stocks[stocks['Symbol']==symbol]['Company Name'].iloc[0]
 
     return get_graphs(symbol, name)
 
 def get_graphs(symbol, name):
-    stock = Stock(symbol, name, get_sentiment(list(api.get_topn(name)), model, tokenizer))
+    stock = None
+    if symbol is not None:
+        stock = stocks[stocks['Symbol'].str.contains(symbol)].iloc[0]
+    else:
+        stock = stocks[stocks['Company Name'].str.contains(name)].iloc[0]
+    symbol = stock['Symbol']
+    name = stock['Company Name']
+    
+    data_df = pd.read_csv(os.path.join(STOCKS_DIR, "%s/full.csv"%symbol))
+    latest = data_df.iloc[-1]
+    latest_df = pd.read_csv(os.path.join(STOCKS_DIR, "%s/%s.csv"%(symbol,latest['Date'])))
+    print(latest_df)
+    stock = Stock(symbol, name, sentiment=latest_df, ticker=True)
+    print("Passed")
     df = stock.getStockData()
-    sentiment_df, avg_sentiment = stock.getSentiment()
+    print("Passed")
+    sentiments = stock.getSentiment()
+    print("Passed")
+    stock_fig = stock_graph(df, symbol, data_df)
+    avg_sentiment_fig = avg_sentiment_graph(stock.avg_score, data_df.iloc[-2]['Score'])
 
-    stock_fig = stock_graph(df, symbol)
-    sentiment_fig = sentiment_graph(sentiment_df)
-    avg_sentiment_fig = avg_sentiment_graph(avg_sentiment)
+    return stock_fig, avg_sentiment_fig, latest_df.drop('description', axis=1).to_dict('records')
 
-    return stock_fig, sentiment_fig, avg_sentiment_fig, symbol, name
+def stock_graph(df, symbol, data_df):
+    x=data_df['Date']
 
-def stock_graph(df, symbol):
-    fig = px.line(df, y=['Open', 'High', 'Low', 'Close'], title='%s stock'%symbol, hover_data=['Volume'])
+    df = df.loc[x]
+
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    fig.add_trace(go.Scatter(
+        x=x, y=data_df['positive'],
+        mode='lines',
+        line=dict(width=0.5, color='rgb(111, 231, 219)'),
+        stackgroup='one',
+        name="positive",
+        groupnorm='percent' # sets the normalization for the sum of the stackgroup
+    ), secondary_y=False)
+    fig.add_trace(go.Scatter(
+        x=x, y=data_df['neutral'],
+        mode='lines',
+        line=dict(width=0.5, color='rgb(233, 241, 206)'),
+        stackgroup='one',
+        name='neutral'
+    ), secondary_y=False)
+    fig.add_trace(go.Scatter(
+        x=x, y=data_df['negative'],
+        mode='lines',
+        line=dict(width=0.5, color='rgb(233, 169, 170)'),
+        stackgroup='one',
+        name='negative'
+    ), secondary_y=False)
+
+    fig.add_trace(go.Scatter(x=x, y=df['Close'],
+                        mode='lines',
+                        name='Close'), secondary_y=True)
+
+    fig.update_layout(
+        showlegend=True,
+        xaxis_type='category',
+        yaxis=dict(
+            type='linear',
+            range=[1, 100],
+            ticksuffix='%'))
 
     fig.update_xaxes(
         rangeslider_visible=True,
@@ -133,19 +184,8 @@ def stock_graph(df, symbol):
 
     return fig
 
-def sentiment_graph(sentiment_df):
-    fig = px.bar(sentiment_df, 
-        x='percentage', 
-        y='Articles', 
-        color='Sentiment', 
-        orientation='h', 
-        hover_data=['Sentiment', 'percentage'],
-        color_discrete_sequence=["#c44e52", "#f4e08a", "#55a868"],
-        height=240)
-    return fig
 
-def avg_sentiment_graph(avg_sentiment):
-    global reference_score
+def avg_sentiment_graph(avg_sentiment, reference_score):
     fig = go.Figure(go.Indicator(
         domain = {'x': [0, 1], 'y': [0, 1]},
         value = avg_sentiment,
@@ -160,7 +200,6 @@ def avg_sentiment_graph(avg_sentiment):
                     {'range': [0.3, 1], 'color': "#8de5a1"}],
                 #'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 490}
                 }))
-    reference_score = avg_sentiment
 
     return fig
 

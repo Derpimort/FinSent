@@ -21,6 +21,8 @@ def create_dirs(df, data_dir):
         dirname = os.path.join(data_dir, symbol)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
+            with open(os.path.join(dirname, "full.csv"), "w") as f:
+                f.write("Date,Score,positive,neutral,negative\n")
 
 
 
@@ -40,7 +42,10 @@ def main(stonks, data_dir, MODEL_DIR="finbert/models/sentiment/base", date=None)
             sentences = (articles['title'] + ". " + articles['description']).values
             stock = Stock(symbol, name, get_sentiment(sentences, model, tokenizer))
             stock.write_csv(os.path.join(data_dir,"%s/%s.csv"%(symbol,date)), articles)
-            result.append(stock.getSentiment())
+            sentiment = stock.getSentiment()
+            result.append(sentiment)
+            with open(os.path.join(data_dir, "%s/full.csv"%symbol), "a") as f:
+                f.write("%s,%f,%f,%f,%f\n"%(date, sentiment['avg_sentiment_score'],sentiment['positive'], sentiment['neutral'], sentiment['negative']))
         except Exception as e:
             not_processed.append(symbol)
 
@@ -61,4 +66,4 @@ if __name__=="__main__":
 
     selected_stocks=["ADANIPOWER", "TCS", "RELIANCE"]
     df = df[df['Symbol'].isin(selected_stocks)]
-    main(df, os.path.join(DATA_DIR,"Stonks/"), date="2020-08-31")
+    main(df, os.path.join(DATA_DIR,"Stonks/"))
