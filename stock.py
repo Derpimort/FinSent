@@ -46,10 +46,11 @@ class Stock:
 
     def getSentiment(self):
         sentiment_dict={'Symbol':self.symbol,
+                        'avg_sentiment_score':self.avg_score,  
+                        'articles': len(self.sentiment),
                         'negative':0,
                         'neutral':0,
-                        'positive':0,
-                        'avg_sentiment_score':self.avg_score}
+                        'positive':0}
         sentiment_dict.update((self.sentiment['prediction'].value_counts(normalize=True) * 100).to_dict())
             
         return sentiment_dict

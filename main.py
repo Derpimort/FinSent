@@ -24,9 +24,9 @@ def create_dirs(df, data_dir):
 
 
 
-def main(stonks, data_dir, MODEL_DIR="finbert/models/sentiment/base"):
+def main(stonks, data_dir, MODEL_DIR="finbert/models/sentiment/base", date=None):
     create_dirs(df, data_dir)
-    date = str(pd.to_datetime('today').date())
+    date = str(pd.to_datetime('today').date()) if not date else date
     model = BertForSequenceClassification.from_pretrained(MODEL_DIR, num_labels=3, cache_dir=None)
     api = Api("newsapi.key")
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -61,4 +61,4 @@ if __name__=="__main__":
 
     selected_stocks=["ADANIPOWER", "TCS", "RELIANCE"]
     df = df[df['Symbol'].isin(selected_stocks)]
-    main(df, os.path.join(DATA_DIR,"Stonks/"))
+    main(df, os.path.join(DATA_DIR,"Stonks/"), date="2020-08-31")
