@@ -15,8 +15,6 @@ from stock import Stock
 DATA_DIR = "data/"
 STOCKS_DIR = os.path.join(DATA_DIR,"Stonks/")
 
-button_clicks = 0
-
 stocks = pd.read_csv(DATA_DIR+"ind_nifty500list.csv")[['Symbol', 'Company Name']]
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -31,39 +29,26 @@ app.layout = html.Div(children=[
     '''),
     html.Div([
         html.Div([
+            html.H4(id="stock_symbol", children="RELIANCE"),
+            html.P(id="stock_name", children="Reliance Industries")
+        ], className="four columns"),
+        html.Div([
             html.Div([
                 html.H5("Select stock"),
                 dcc.Dropdown(
                 id='select_stock',
-                options=[{'label': name, 'value': sym} for sym, name in stocks.values],
+                options=[{'label': "%s - %s"%(sym, name), 'value': sym} for sym, name in stocks.values],
                 value='RELIANCE'
             )
             ]),
-        ], className="three columns"),
-        html.Div([
-            html.Br(),
-            html.P("---OR---")
-        ], className="one columns"),
-        html.Div([
-            html.H5("Stock symbol"),
-            dcc.Input(id="stock_symbol_input", value="RELIANCE", type="text")
-            ], className="two columns"),
-        html.Div([
-            html.H5("News search term"),
-            dcc.Input(id="stock_search_input", value="Reliance Industries", type="text")
-            ], className="two columns offset-by-one column"),
-        html.Div([
-            html.Button("Search", id="stock_search_submit", n_clicks=0),
-            html.P("")
-        ], className="two columns offset-by-one column")
-
+        ], className="six columns")
     ], className="row"),
     html.Div([
         html.Div([
             dcc.Graph(id='stock_data_graph')
         ], className="eight columns"),
         html.Div([
-            dcc.Graph(id='stock_sentiment_guage'),
+            dcc.Graph(id='stock_sentiment_guage')
         ], className="four columns"),
     ], className="row"),
     dash_table.DataTable(
@@ -74,7 +59,8 @@ app.layout = html.Div(children=[
         'height': 'auto',
         'whiteSpace': 'normal'
     },
-        columns = [{"name": i, "id": i} for i in ['title', 'url', 'publishedAt', 'prediction',
+    
+        columns = [{"name": i, "id": i, "presentation": "markdown"} for i in ['title', 'publishedAt', 'prediction',
        'sentiment_score']]
     )
 ])
@@ -82,24 +68,15 @@ app.layout = html.Div(children=[
 @app.callback(
     [Output('stock_data_graph', 'figure'),
     Output('stock_sentiment_guage', 'figure'),
-    Output('stock_data_table', 'data')],
-    [Input('stock_search_submit', 'n_clicks'),
-    Input('select_stock', 'value'),
-    State('stock_symbol_input', 'value'),
-    State('stock_search_input', 'value')]
+    Output('stock_data_table', 'data'),
+    Output('stock_symbol', 'children'),
+    Output('stock_name', 'children')],
+    [Input('select_stock', 'value')]
 )
-def update(n_clicks, dropdown, sym_input, searchq):
-    global button_clicks #Probably bad practice but it'll do for now
-    symbol=""
-    name=""
+def update(dropdown):
     
-    if n_clicks != button_clicks:
-        symbol = sym_input
-        name = searchq
-        button_clicks = n_clicks
-    else:
-        symbol = 'RELIANCE' if not dropdown else dropdown
-        name = stocks[stocks['Symbol']==symbol]['Company Name'].iloc[0]
+    symbol = 'RELIANCE' if not dropdown else dropdown
+    name = stocks[stocks['Symbol']==symbol]['Company Name'].iloc[0]
 
     return get_graphs(symbol, name)
 
@@ -121,8 +98,9 @@ def get_graphs(symbol, name):
     sentiments = stock.getSentiment()
     stock_fig = stock_graph(df, symbol, data_df)
     avg_sentiment_fig = avg_sentiment_graph(stock.avg_score, data_df.iloc[-2]['Score'])
+    latest_df['title'] = '[' + latest_df['title'].astype(str) + '](' + latest_df['url'].astype(str) + ')'
 
-    return stock_fig, avg_sentiment_fig, latest_df.drop('description', axis=1).to_dict('records')
+    return stock_fig, avg_sentiment_fig, latest_df.drop(['description', 'url'], axis=1).to_dict('records'), symbol, name
 
 def stock_graph(df, symbol, data_df):
     data_df['Date'] = pd.to_datetime(data_df['Date'])
@@ -189,7 +167,7 @@ def avg_sentiment_graph(avg_sentiment, reference_score):
         domain = {'x': [0, 1], 'y': [0, 1]},
         value = avg_sentiment,
         mode = "gauge+number+delta",
-        title = {'text': "Average Sentiment Score"},
+        title = {'text': "Average Sentiment Score w/ Delta"},
         delta = {'reference': reference_score},
         gauge = {'axis': {'range': [-1, 1]},
                 'bar': {'color': "#4878d0"},
@@ -198,7 +176,8 @@ def avg_sentiment_graph(avg_sentiment, reference_score):
                     {'range': [-0.3, 0.3], 'color': "#fffea3"},
                     {'range': [0.3, 1], 'color': "#8de5a1"}],
                 #'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 490}
-                }))
+                }),
+                )
 
     return fig
 
