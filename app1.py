@@ -1,3 +1,10 @@
+"""
+ Created on Sun Sep 06 2020 19:47:32
+
+ @author: Derpimort
+"""
+
+
 import os
 import dash
 from dash.dependencies import Input, Output
@@ -11,8 +18,11 @@ from constants import DATA_DIR
 # Read main csv
 date = pd.to_datetime('today')
 csv_path=DATA_DIR+"Stonks/%s.csv"%date.date()
+
+# Subtract 1 day till df found, probably should add another exit condition incase user didn't run main.py first
 while not os.path.exists(csv_path):
-    inp=input("Data not found for %s use data from previous date[y/n]?"%date.date())
+    # inp=input("Data not found for %s use data from previous date[y/n]?"%date.date())
+    inp = "y"
     if inp=="y":
         date = date - pd.DateOffset(days=1)
         csv_path=DATA_DIR+"Stonks/%s.csv"%date.date()
@@ -20,17 +30,20 @@ while not os.path.exists(csv_path):
         exit(0)
 df = pd.read_csv(csv_path)
 
-# Read prev date csv
+# Read prev date csv same logic as above
 date = date - pd.DateOffset(days=1)
 csv_path=DATA_DIR+"Stonks/%s.csv"%date.date()
 while not os.path.exists(csv_path):
-    inp = input("Data not found for %s use data from previous date[y/n]?"%date.date())
+    # inp = input("Data not found for %s use data from previous date[y/n]?"%date.date())
+    inp = "y"
     if inp=="y":
         date = date - pd.DateOffset(days=1)
         csv_path = DATA_DIR+"Stonks/%s.csv"%date.date()
     else:
         exit(0)
 prev_df = pd.read_csv(csv_path)
+
+# Compare last 2 scores to get delta
 df = df.merge(prev_df.set_index('Symbol')['avg_sentiment_score'], on='Symbol')
 df['delta'] = ((df['avg_sentiment_score_x']-df['avg_sentiment_score_y'])/df['avg_sentiment_score_x'])*100
 df=df.drop('avg_sentiment_score_y', axis=1)
@@ -40,6 +53,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
+# Bar chart depicting stock sentiment delta
 colors = {
     'Increased':"#55a868",
     'Decreased':"#c44e52",

@@ -1,3 +1,9 @@
+"""
+ Created on Sun Sep 06 2020 21:59:25
+
+ @author: Derpimort
+"""
+
 import os
 import random
 import string
@@ -9,8 +15,8 @@ from nltk.tokenize import sent_tokenize
 # chunks, InputExample, convert_examples_to_feature
 from finbert.utils import *
 
-DATA_DIR="data/"
-MODEL_DIR="finbert/models/sentiment/base"
+from constants import DATA_DIR, MODEL_DIR
+
 BATCH_SIZE=5
 
 def get_sentiment(text, model, tokenizer=None, write_to_csv=False, path=None):
@@ -27,6 +33,11 @@ def get_sentiment(text, model, tokenizer=None, write_to_csv=False, path=None):
     write_to_csv (optional): bool
     path (optional): string
         path to write the string
+    
+    Returns
+    --------
+    results:    pd.DataFrame
+                result df with columns [sentence, logit, prediction, sentiment_score]
     """
     # print(text)
     model.eval()

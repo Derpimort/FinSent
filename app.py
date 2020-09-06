@@ -1,3 +1,10 @@
+"""
+ Created on Sun Sep 06 2020 19:30:34
+
+ @author: Derpimort
+"""
+
+
 import os
 import dash
 import dash_core_components as dcc
@@ -11,16 +18,18 @@ import pandas as pd
 
 from stock import Stock
 
+# Data dir containing stock list and preprocessed data
+from constants import DATA_DIR, STOCKS_DIR
 
-DATA_DIR = "data/"
-STOCKS_DIR = os.path.join(DATA_DIR,"Stonks/")
 
+# stocks list
 stocks = pd.read_csv(DATA_DIR+"ind_nifty500list.csv")[['Symbol', 'Company Name']]
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
+# Dashboard components layout
 app.layout = html.Div(children=[
     html.H1(children='Financial sentiment analysis'),
 
@@ -65,6 +74,7 @@ app.layout = html.Div(children=[
     )
 ])
 
+# Update function on stock selection from dropdown
 @app.callback(
     [Output('stock_data_graph', 'figure'),
     Output('stock_sentiment_guage', 'figure'),
@@ -81,6 +91,28 @@ def update(dropdown):
     return get_graphs(symbol, name)
 
 def get_graphs(symbol, name):
+    """
+        Parameters
+        -----------
+        symbol: str
+                stock symbol
+        name:   str
+                stock name
+        
+        Returns
+        --------
+        stock_fig:  plotly.graph_objects.Figure
+                    line plot with stock sentiment and close value over time
+        avg_sentiment_fig:  plotly.graph_objects.Figure
+                            guage chart with stock sentiment score and delta value
+        latest_df:  dict
+                    dictionary containing latest articles records
+        symbol: str
+                stock symbol
+        name:   str
+                stock name
+    """
+    # get stock symbol from either symbol or name
     stock = None
     if symbol is not None and symbol != "":
         stock = stocks[stocks['Symbol'].str.contains(symbol)].iloc[0]
@@ -89,13 +121,20 @@ def get_graphs(symbol, name):
     symbol = stock['Symbol']
     name = stock['Company Name']
     
+    # read dataframes
     data_df = pd.read_csv(os.path.join(STOCKS_DIR, "%s/full.csv"%symbol))
     data_df = data_df.sort_values('Date')
+
+    # Read latest available data
     latest = data_df.iloc[-1]
     latest_df = pd.read_csv(os.path.join(STOCKS_DIR, "%s/%s.csv"%(symbol,latest['Date'])))
+
+    # Get ticker data and sentiment
     stock = Stock(symbol, name, sentiment=latest_df, ticker=True)
     df = stock.getStockData()
     sentiments = stock.getSentiment()
+
+    # get graphs and tabledata
     stock_fig = stock_graph(df, symbol, data_df)
     avg_sentiment_fig = avg_sentiment_graph(stock.avg_score, data_df.iloc[-2]['Score'])
     latest_df['title'] = '[' + latest_df['title'].astype(str) + '](' + latest_df['url'].astype(str) + ')'
@@ -182,4 +221,5 @@ def avg_sentiment_graph(avg_sentiment, reference_score):
     return fig
 
 if __name__ == '__main__':
+    # host 0.0.0.0 for docker
     app.run_server(host='0.0.0.0',debug=True)
