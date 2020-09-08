@@ -12,46 +12,88 @@ import dash_table
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
-from constants import DATA_DIR
+import numpy as np
+from constants import DATA_DIR, STOCKS_DIR
 
-# Read main csv
-date = pd.to_datetime('today')
-csv_path=DATA_DIR+"Stonks/%s.csv"%date.date()
+def get_df(df, prev_df=None):
+    """ Return df with delta metrics if prev_df is not None """
+    df = pd.read_csv(os.path.join(STOCKS_DIR, "%s.csv"%df))
 
-# Subtract 1 day till df found, probably should add another exit condition incase user didn't run main.py first
-while not os.path.exists(csv_path):
-    # inp=input("Data not found for %s use data from previous date[y/n]?"%date.date())
-    inp = "y"
-    if inp=="y":
-        date = date - pd.DateOffset(days=1)
-        csv_path=DATA_DIR+"Stonks/%s.csv"%date.date()
-    else:
-        exit(0)
-df = pd.read_csv(csv_path)
+    if prev_df:
+        prev_df = pd.read_csv(os.path.join(STOCKS_DIR, "%s.csv"%prev_df))
 
-# Read prev date csv same logic as above
-date = date - pd.DateOffset(days=1)
-csv_path=DATA_DIR+"Stonks/%s.csv"%date.date()
-while not os.path.exists(csv_path):
-    # inp = input("Data not found for %s use data from previous date[y/n]?"%date.date())
-    inp = "y"
-    if inp=="y":
-        date = date - pd.DateOffset(days=1)
-        csv_path = DATA_DIR+"Stonks/%s.csv"%date.date()
-    else:
-        exit(0)
-prev_df = pd.read_csv(csv_path)
+        # Get stock industries
+        stocks = pd.read_csv(DATA_DIR+"ind_nifty500list.csv")
+        df = stocks[['Symbol','Industry']].merge(df, on="Symbol")
 
-# Get stock industries
-stocks = pd.read_csv(DATA_DIR+"ind_nifty500list.csv")
-df = stocks[['Symbol','Industry']].merge(df, on="Symbol")
+        # Compare last 2 scores to get delta
+        df = df.merge(prev_df.set_index('Symbol')['avg_sentiment_score'], on='Symbol')
+        df['delta'] = ((df['avg_sentiment_score_x']-df['avg_sentiment_score_y'])/df['avg_sentiment_score_x'])*100
+        df=df.drop('avg_sentiment_score_y', axis=1)
+        df['delta_status'] = df['delta'].apply(lambda x: 'Increased' if x>0 else 'Stable' if x==0 else 'Decreased')
+    
+    return df
 
-# Compare last 2 scores to get delta
-df = df.merge(prev_df.set_index('Symbol')['avg_sentiment_score'], on='Symbol')
-df['delta'] = ((df['avg_sentiment_score_x']-df['avg_sentiment_score_y'])/df['avg_sentiment_score_x'])*100
-df=df.drop('avg_sentiment_score_y', axis=1)
-df['delta_status'] = df['delta'].apply(lambda x: 'Increased' if x>0 else 'Stable' if x==0 else 'Decreased')
+def empty_plot(label_annotation):
+    '''
+    Returns an empty plot with a centered text.
+    '''
+
+    trace1 = go.Scatter(
+        x=[],
+        y=[]
+    )
+
+    data = [trace1]
+
+    layout = go.Layout(
+        showlegend=False,
+        xaxis=dict(
+            autorange=True,
+            showgrid=False,
+            zeroline=False,
+            showline=False,
+            ticks='',
+            showticklabels=False
+        ),
+        yaxis=dict(
+            autorange=True,
+            showgrid=False,
+            zeroline=False,
+            showline=False,
+            ticks='',
+            showticklabels=False
+        ),
+        annotations=[
+            dict(
+                x=0,
+                y=0,
+                xref='x',
+                yref='y',
+                text=label_annotation,
+                showarrow=True,
+                arrowhead=7,
+                ax=0,
+                ay=0
+            )
+        ]
+    )
+
+    fig = go.Figure(data=data, layout=layout)
+    # END
+    return fig
+
+# Get all data files
+dfs = []
+for file in os.listdir(STOCKS_DIR):
+    if file.endswith("csv"):
+        dfs.append(file.split(".")[0])
+dfs.sort()
+dfs_pd = pd.to_datetime(dfs).astype(np.int64)
+
+df = None
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -63,7 +105,18 @@ colors = {
     'Decreased':"#c44e52",
     'Stable': "#000000"
 }
-fig = px.bar(df, y='Symbol', x='delta', color='delta_status', orientation='h', color_discrete_map=colors)
+fig = empty_plot("Delta bar chart")
+
+if len(dfs) == 0 :
+    print("No csv files found, Please run main.py atleast once before running dashboards")
+    exit(0)
+elif len(dfs) < 2:
+    print("Only one csv found, delta metrics won't be available")
+    df = get_df(dfs[-1])
+else:
+    df = get_df(dfs[-1], dfs[-2])
+    fig = px.bar(df, y='Symbol', x='delta', color='delta_status', orientation='h', color_discrete_map=colors)
+
 
 app.layout = html.Div([
     dash_table.DataTable(
@@ -85,11 +138,30 @@ app.layout = html.Div([
         page_current= 0,
         page_size= 10,
     ),
+    dcc.Slider(
+        id='date-slider',
+        min=dfs_pd.min(),
+        max=dfs_pd.max(),
+        value=dfs_pd.max(),
+        marks={i: pd.to_datetime(i).date() for i in dfs_pd[1::(len(dfs_pd)//20)+1]},
+        step=None
+    ),
     html.Div(id='datatable-interactivity-container'),
     html.Div([
         dcc.Graph(figure=fig)
     ])
 ])
+
+@app.callback(
+    Output('datatable-interactivity', 'data'),
+    [Input('date-slider', 'value')]
+)
+def update_table(selected_date):
+    """ Update dashboard according to selected date """
+    selected_date = str(pd.to_datetime(selected_date).date())
+    selected_index = dfs.index(selected_date)
+    df = get_df(dfs[selected_index], dfs[selected_index-1])
+    return df.to_dict('records')
 
 @app.callback(
     Output('datatable-interactivity', 'style_data_conditional'),
