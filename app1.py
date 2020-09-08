@@ -43,6 +43,10 @@ while not os.path.exists(csv_path):
         exit(0)
 prev_df = pd.read_csv(csv_path)
 
+# Get stock industries
+stocks = pd.read_csv(DATA_DIR+"ind_nifty500list.csv")
+df = stocks[['Symbol','Industry']].merge(df, on="Symbol")
+
 # Compare last 2 scores to get delta
 df = df.merge(prev_df.set_index('Symbol')['avg_sentiment_score'], on='Symbol')
 df['delta'] = ((df['avg_sentiment_score_x']-df['avg_sentiment_score_y'])/df['avg_sentiment_score_x'])*100
@@ -145,7 +149,7 @@ def update_graphs(rows, derived_virtual_selected_rows):
         # check if column exists - user may have deleted it
         # If `column.deletable=False`, then you don't
         # need to do this check.
-        for column in ["negative", "neutral", "positive", "articles", "avg_sentiment_score_x", 'delta'] if column in dff
+        for column in ["Industry", "negative", "neutral", "positive", "articles", "avg_sentiment_score_x", 'delta'] if column in dff
     ]
 
 
