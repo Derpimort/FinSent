@@ -21,7 +21,6 @@ from stock import Stock
 # Data dir containing stock list and preprocessed data
 from constants import DATA_DIR, STOCKS_DIR
 
-
 # stocks list
 stocks = pd.read_csv(DATA_DIR+"ind_nifty500list.csv")[['Symbol', 'Company Name']]
 
@@ -67,10 +66,14 @@ app.layout = html.Div(children=[
         'minWidth': '180px', 'width': '180px', 'maxWidth': '180px',
         'height': 'auto',
         'whiteSpace': 'normal'
-    },
-    
+        },
         columns = [{"name": i, "id": i, "presentation": "markdown"} for i in ['title', 'publishedAt', 'prediction',
-       'sentiment_score']]
+       'sentiment_score']],
+        sort_action="native",
+        sort_mode="multi",
+        page_action="native",
+        page_current= 0,
+        page_size= 10,
     )
 ])
 
