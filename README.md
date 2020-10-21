@@ -14,8 +14,8 @@ nltk.download('punkt')
 ```
 
 ### Option B - docker
-1. docker build -t finbert .
-2. docker run -it --rm finbert:latest -p 8050:8050 -p 8051:8051
+1. `docker build -t finbert .`
+2. `docker run -it --rm finbert:latest -p 8050:8050 -p 8051:8051`
 
 ## Run
 
