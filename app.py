@@ -16,10 +16,10 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
 
-from stock import Stock
+from finsent.stock import Stock
 
 # Data dir containing stock list and preprocessed data
-from constants import DATA_DIR, STOCKS_DIR
+from finsent.constants import DATA_DIR, STOCKS_DIR
 
 # stocks list
 stocks = pd.read_csv(DATA_DIR+"ind_nifty500list.csv")[['Symbol', 'Company Name']]

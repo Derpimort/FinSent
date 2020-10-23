@@ -15,7 +15,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
-from constants import DATA_DIR, STOCKS_DIR
+from finsent.constants import DATA_DIR, STOCKS_DIR
 
 def get_df(df, prev_df=None):
     """ Return df with delta metrics if prev_df is not None """
@@ -92,7 +92,6 @@ for file in os.listdir(STOCKS_DIR):
         dfs.append(file.split(".")[0])
 dfs.sort()
 dfs_pd = pd.to_datetime(dfs).astype(np.int64)
-
 df = None
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -138,14 +137,19 @@ app.layout = html.Div([
         page_current= 0,
         page_size= 10,
     ),
-    dcc.Slider(
-        id='date-slider',
-        min=dfs_pd.min(),
-        max=dfs_pd.max(),
-        value=dfs_pd.max(),
-        marks={i: pd.to_datetime(i).date() for i in dfs_pd[1::(len(dfs_pd)//20)+1]},
-        step=None
-    ),
+    html.Div([
+        dcc.Slider(
+            id='date-slider',
+            min=dfs_pd.min(),
+            max=dfs_pd.max(),
+            value=dfs_pd.max(),
+            marks={(i):{'label': pd.to_datetime(i).strftime('%d-%m'), "style": {"transform": "rotate(45deg)"}} for i in dfs_pd[1::(len(dfs_pd)//20)+1]},
+            step=None
+        )
+    ]),
+    html.Br(),
+    html.Br(),
+    html.Br(),
     html.Div(id='datatable-interactivity-container'),
     html.Div([
         dcc.Graph(figure=fig)
