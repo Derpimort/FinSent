@@ -200,10 +200,11 @@ def update_graphs(rows, derived_virtual_selected_rows):
               for i in range(len(dff))]
     graphs = []
     index = 0
-    N_COLS = 3
-    N_COLS_str = "four" # 12/N_COLS
+    N_COLS = 6
+    N_COLS_str = "two" # 12//N_COLS
     current_row=[]
-    for column in ["Industry", "negative", "neutral", "positive", "articles", "avg_sentiment_score_x", 'delta']:
+    # ["Industry", "negative", "neutral", "positive", "articles", "avg_sentiment_score_x", 'delta']
+    for column in ["negative", "neutral", "positive", "articles", "avg_sentiment_score_x", 'delta']:
         if column in dff:
             if index%N_COLS==0 and index!=0:
                 row = html.Div(current_row[index-N_COLS:index], className="row")
@@ -237,6 +238,9 @@ def update_graphs(rows, derived_virtual_selected_rows):
                 
             )
             index+=1
+    if not graphs:
+        row = html.Div(current_row[index-N_COLS:index], className="row")
+        graphs.append(row)
     return graphs
 
 
