@@ -29,3 +29,15 @@ Note : The terminal will output the url for each dashboard
 ### Screenshots
 ![Home](resources/Stock.png)
 ![Main](resources/Main.png)
+
+## Credits
+
+Couldn't have done this without the [ProsusAI/finBERT](https://github.com/ProsusAI/finBERT) repo ofcourse.
+```bibtex
+@misc{1908.10063,
+Author = {Dogu Araci},
+Title = {FinBERT: Financial Sentiment Analysis with Pre-trained Language Models},
+Year = {2019},
+Eprint = {arXiv:1908.10063},
+}
+```
