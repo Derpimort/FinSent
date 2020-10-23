@@ -104,7 +104,7 @@ colors = {
     'Decreased':"#c44e52",
     'Stable': "#000000"
 }
-fig = empty_plot("Delta bar chart")
+fig = None
 
 if len(dfs) == 0 :
     print("No csv files found, Please run main.py atleast once before running dashboards")
@@ -112,6 +112,7 @@ if len(dfs) == 0 :
 elif len(dfs) < 2:
     print("Only one csv found, delta metrics won't be available")
     df = get_df(dfs[-1])
+    fig = empty_plot("Delta bar chart")
 else:
     df = get_df(dfs[-1], dfs[-2])
     fig = px.bar(df, y='Symbol', x='delta', color='delta_status', orientation='h', color_discrete_map=colors)
@@ -152,12 +153,13 @@ app.layout = html.Div([
     html.Br(),
     html.Div(id='datatable-interactivity-container'),
     html.Div([
-        dcc.Graph(figure=fig)
+        dcc.Graph(id='delta_bar_chart', figure=fig)
     ])
 ])
 
 @app.callback(
-    Output('datatable-interactivity', 'data'),
+    [Output('datatable-interactivity', 'data'),
+    Output('delta_bar_chart', 'figure')],
     [Input('date-slider', 'value')]
 )
 def update_table(selected_date):
@@ -165,7 +167,8 @@ def update_table(selected_date):
     selected_date = str(pd.to_datetime(selected_date).date())
     selected_index = dfs.index(selected_date)
     df = get_df(dfs[selected_index], dfs[selected_index-1])
-    return df.to_dict('records')
+    fig = px.bar(df, y='Symbol', x='delta', color='delta_status', orientation='h', color_discrete_map=colors)
+    return df.to_dict('records'), fig
 
 @app.callback(
     Output('datatable-interactivity', 'style_data_conditional'),
