@@ -85,6 +85,21 @@ def empty_plot(label_annotation):
     # END
     return fig
 
+def delta_bar_chart(df):
+    colors = {
+    'Increased':"#55a868",
+    'Decreased':"#c44e52",
+    'Stable': "#000000"
+    }
+    fig = px.bar(df, 
+            y='Symbol', 
+            x='delta', 
+            color='delta_status', 
+            orientation='h', 
+            color_discrete_map=colors)
+    fig.update_yaxes(categoryorder="total ascending")
+    return fig
+
 # Get all data files
 dfs = []
 for file in os.listdir(STOCKS_DIR):
@@ -99,11 +114,6 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 # Bar chart depicting stock sentiment delta
-colors = {
-    'Increased':"#55a868",
-    'Decreased':"#c44e52",
-    'Stable': "#000000"
-}
 fig = None
 
 if len(dfs) == 0 :
@@ -115,7 +125,7 @@ elif len(dfs) < 2:
     fig = empty_plot("Delta bar chart")
 else:
     df = get_df(dfs[-1], dfs[-2])
-    fig = px.bar(df, y='Symbol', x='delta', color='delta_status', orientation='h', color_discrete_map=colors)
+    fig = delta_bar_chart(df)
 
 
 app.layout = html.Div([
@@ -167,7 +177,7 @@ def update_table(selected_date):
     selected_date = str(pd.to_datetime(selected_date).date())
     selected_index = dfs.index(selected_date)
     df = get_df(dfs[selected_index], dfs[selected_index-1])
-    fig = px.bar(df, y='Symbol', x='delta', color='delta_status', orientation='h', color_discrete_map=colors)
+    fig = delta_bar_chart(df)
     return df.to_dict('records'), fig
 
 @app.callback(
