@@ -198,35 +198,46 @@ def update_graphs(rows, derived_virtual_selected_rows):
 
     colors = ['#7FDBFF' if i in derived_virtual_selected_rows else '#0074D9'
               for i in range(len(dff))]
-
-    return [
-        dcc.Graph(
-            id=column,
-            figure={
-                "data": [
-                    {
-                        "x": dff["Symbol"],
-                        "y": dff[column],
-                        "type": "bar",
-                        "marker": {"color": colors},
-                    }
-                ],
-                "layout": {
-                    "xaxis": {"automargin": True},
-                    "yaxis": {
-                        "automargin": True,
-                        "title": {"text": column}
-                    },
-                    "height": 250,
-                    "margin": {"t": 10, "l": 10, "r": 10},
-                },
-            },
-        )
-        # check if column exists - user may have deleted it
-        # If `column.deletable=False`, then you don't
-        # need to do this check.
-        for column in ["Industry", "negative", "neutral", "positive", "articles", "avg_sentiment_score_x", 'delta'] if column in dff
-    ]
+    graphs = []
+    index = 0
+    N_COLS = 3
+    N_COLS_str = "four" # 12/N_COLS
+    current_row=[]
+    for column in ["Industry", "negative", "neutral", "positive", "articles", "avg_sentiment_score_x", 'delta']:
+        if column in dff:
+            if index%N_COLS==0 and index!=0:
+                row = html.Div(current_row[index-N_COLS:index], className="row")
+                graphs.append(row)
+            
+            current_row.append(
+                html.Div([
+                    dcc.Graph(
+                        id=column,
+                        figure={
+                            "data": [
+                                {
+                                    "x": dff["Symbol"],
+                                    "y": dff[column],
+                                    "type": "bar",
+                                    "marker": {"color": colors},
+                                }
+                            ],
+                            "layout": {
+                                "xaxis": {"automargin": True},
+                                "yaxis": {
+                                    "automargin": True,
+                                    "title": {"text": column}
+                                },
+                                "height": 250,
+                                "margin": {"t": 10, "l": 10, "r": 10},
+                            },
+                        },
+                    )
+                ], className="%s columns"%N_COLS_str)
+                
+            )
+            index+=1
+    return graphs
 
 
 
