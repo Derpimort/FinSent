@@ -12,15 +12,15 @@ import random
 import pandas as pd
 from tqdm import tqdm
 
-from api import Api
-from stock import Stock
-from sentiment_analysis import get_sentiment
+from finsent.api import Api
+from finsent.stock import Stock
+from finsent.sentiment_analysis import get_sentiment
 
 import yfinance as yf
 
 from pytorch_pretrained_bert.modeling import BertForSequenceClassification
 from pytorch_pretrained_bert.tokenization import BertTokenizer
-from constants import DATA_DIR, MODEL_DIR
+from finsent.constants import DATA_DIR, MODEL_DIR
 
 def create_dirs(df, data_dir):
     """ Create all stock symbols and data directories """
@@ -37,7 +37,7 @@ def create_dirs(df, data_dir):
 
 
 
-def main(stonks, data_dir, MODEL_DIR=MODEL_DIR, date=None):
+def main(stonks, data_dir, MODEL_DIR=MODEL_DIR, date=None, prev_10=False):
     """ 
     Process all stocks and write data to data_dir. 
     Will process data till 10 days prior to given date on the first run
@@ -64,15 +64,17 @@ def main(stonks, data_dir, MODEL_DIR=MODEL_DIR, date=None):
     # Get today's date if date param not provided
     date = pd.to_datetime('today') if not date else pd.to_datetime(date)
     dates=[]
-
     # check output directories
-    if create_dirs(df, data_dir):
+    if create_dirs(df, data_dir) or prev_10:
         dates = [date - pd.DateOffset(days=i) for i in range(9,-1,-1)]
     else:
         dates = [date]
     
     # Get finbert model, newsapi client and tokenizer
     model = BertForSequenceClassification.from_pretrained(MODEL_DIR, num_labels=3, cache_dir=None)
+    # apikey = ""
+    # with open("newsapi.key", "r") as apikey_f:
+    #     apikey = apikey_f.read().strip("\n")
     api = Api("newsapi.key")
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
@@ -104,12 +106,12 @@ def main(stonks, data_dir, MODEL_DIR=MODEL_DIR, date=None):
                 with open(os.path.join(data_dir, "%s/full.csv"%symbol), "a") as f:
                     f.write("%s,%f,%f,%f,%f\n"%(curr_date, sentiment['avg_sentiment_score'],sentiment['positive'], sentiment['neutral'], sentiment['negative']))
             except Exception as e:
-                not_processed.append(symbol)
+                not_processed.append((symbol, e))
 
         if len(not_processed)>0:
             print("Following stocks not processed due to no articles or errors")
-            for i in not_processed:
-                print(i)
+            for stock_sym, exception in not_processed:
+                print(stock_sym, exception)
         print("Writing results to", os.path.join(data_dir, "%s.csv"%curr_date))
         result_df = pd.DataFrame(result)
         result_df.to_csv(os.path.join(data_dir, "%s.csv"%curr_date), index=False)
@@ -127,7 +129,7 @@ if __name__=="__main__":
     date = sys.argv[1] if len(sys.argv)>1 else None
 
     ## Comment the following two lines to process all stocks instead of just select 3
-    selected_stocks=["ADANIPOWER", "TCS", "RELIANCE"]
+    selected_stocks=["ADANIPOWER", "TCS", "RELIANCE", "IDEA", "LTI", "INFY"]
     df = df[df['Symbol'].isin(selected_stocks)]
 
-    main(df, os.path.join(DATA_DIR,"Stonks/"), date=date)
+    main(df, os.path.join(DATA_DIR,"Stonks/"), date=date, prev_10=True)

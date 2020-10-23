@@ -15,7 +15,7 @@ from nltk.tokenize import sent_tokenize
 # chunks, InputExample, convert_examples_to_feature
 from finbert.utils import *
 
-from constants import DATA_DIR, MODEL_DIR
+from .constants import DATA_DIR, MODEL_DIR
 
 BATCH_SIZE=5
 
