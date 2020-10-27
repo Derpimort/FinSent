@@ -3,11 +3,11 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 
 from app import app
-from apps import stonk, daily
+from apps import home, stonk, daily
 
 
 app.layout = html.Div([
-    dcc.Location(id='url', refresh=False),
+    dcc.Location(id='url', refresh=True),
     html.Div(id='page-content')
 ])
 
@@ -20,7 +20,7 @@ def display_page(pathname):
     elif pathname == '/stonk':
         return stonk.layout
     else:
-        return '404'
+        return home.layout
 
 if __name__ == '__main__':
     app.run_server(host='0.0.0.0', debug=True, port=8050)
