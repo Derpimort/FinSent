@@ -162,9 +162,14 @@ app.layout = html.Div([
     html.Br(),
     html.Br(),
     html.Div(id='datatable-interactivity-container'),
-    html.Div([
-        dcc.Graph(id='delta_bar_chart', figure=fig)
-    ])
+    dcc.Loading(
+        id='loading-graphs-main',
+        children=[
+            html.Div([
+                dcc.Graph(id='delta_bar_chart', figure=fig)
+            ])
+        ]
+    )
 ])
 
 @app.callback(

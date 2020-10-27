@@ -51,30 +51,41 @@ app.layout = html.Div(children=[
             ]),
         ], className="six columns")
     ], className="row"),
-    html.Div([
-        html.Div([
-            dcc.Graph(id='stock_data_graph')
-        ], className="eight columns"),
-        html.Div([
-            dcc.Graph(id='stock_sentiment_guage')
-        ], className="four columns"),
-    ], className="row"),
-    dash_table.DataTable(
-        id='stock_data_table',
-        style_cell={
-        # all three widths are needed
-        'minWidth': '180px', 'width': '180px', 'maxWidth': '180px',
-        'height': 'auto',
-        'whiteSpace': 'normal'
-        },
-        columns = [{"name": i, "id": i, "presentation": "markdown"} for i in ['title', 'publishedAt', 'prediction',
-       'sentiment_score']],
-        sort_action="native",
-        sort_mode="multi",
-        page_action="native",
-        page_current= 0,
-        page_size= 10,
+    dcc.Loading(
+        id="loading-graphs-indi",
+        children=[
+            html.Div([
+                html.Div([
+                    dcc.Graph(id='stock_data_graph')
+                ], className="eight columns"),
+                html.Div([
+                    dcc.Graph(id='stock_sentiment_guage')
+                ], className="four columns"),
+            ], className="row")
+        ]
+    ),
+    dcc.Loading(
+        id="loading-table-indi",
+        children=[
+            dash_table.DataTable(
+                id='stock_data_table',
+                style_cell={
+                # all three widths are needed
+                'minWidth': '180px', 'width': '180px', 'maxWidth': '180px',
+                'height': 'auto',
+                'whiteSpace': 'normal'
+                },
+                columns = [{"name": i, "id": i, "presentation": "markdown"} for i in ['title', 'publishedAt', 'prediction',
+            'sentiment_score']],
+                sort_action="native",
+                sort_mode="multi",
+                page_action="native",
+                page_current= 0,
+                page_size= 10,
+            )
+        ]
     )
+    
 ])
 
 # Update function on stock selection from dropdown
