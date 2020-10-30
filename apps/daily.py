@@ -17,6 +17,8 @@ import pandas as pd
 import numpy as np
 from finsent.constants import DATA_DIR, STOCKS_DIR
 
+from app import app
+
 def get_df(df, prev_df=None):
     """ Return df with delta metrics if prev_df is not None """
     df = pd.read_csv(os.path.join(STOCKS_DIR, "%s.csv"%df))
@@ -109,9 +111,6 @@ dfs.sort()
 dfs_pd = pd.to_datetime(dfs).astype(np.int64)
 df = None
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 # Bar chart depicting stock sentiment delta
 fig = None
@@ -128,7 +127,7 @@ else:
     fig = delta_bar_chart(df)
 
 
-app.layout = html.Div([
+layout = html.Div([
     dash_table.DataTable(
         id='datatable-interactivity',
         columns=[
@@ -162,9 +161,14 @@ app.layout = html.Div([
     html.Br(),
     html.Br(),
     html.Div(id='datatable-interactivity-container'),
-    html.Div([
-        dcc.Graph(id='delta_bar_chart', figure=fig)
-    ])
+    dcc.Loading(
+        id='loading-graphs-main',
+        children=[
+            html.Div([
+                dcc.Graph(id='delta_bar_chart', figure=fig)
+            ])
+        ]
+    )
 ])
 
 @app.callback(
@@ -259,4 +263,5 @@ def update_graphs(rows, derived_virtual_selected_rows):
 
 
 if __name__ == '__main__':
+    app.layout = layout
     app.run_server(host='0.0.0.0', debug=True, port=8051)
