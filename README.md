@@ -21,8 +21,7 @@ nltk.download('punkt')
 
 1. `conda activate finbert`
 2. `python3 main.py` Input date if manual else it'll fetch data for today.
-3. `python3 app.py` for Dashboard 1.
-4. `python3 app1.py` for Dashboard 2.
+3. `python3 app.py` for Dashboard.
 
 Note : The terminal will output the url for each dashboard
 

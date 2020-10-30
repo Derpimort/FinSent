@@ -132,4 +132,4 @@ if __name__=="__main__":
     selected_stocks=["ADANIPOWER", "TCS", "RELIANCE", "IDEA", "LTI", "INFY"]
     df = df[df['Symbol'].isin(selected_stocks)]
 
-    main(df, os.path.join(DATA_DIR,"Stonks/"), date=date, prev_10=True)
+    main(df, os.path.join(DATA_DIR,"Stonks/"), date=date)
