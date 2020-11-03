@@ -10,14 +10,16 @@ footer = html.Footer([
                         html.Li(
                             html.A(
                                 html.I(className="fa fa-github"), 
-                                href="https://github.com/Derpimort",
+                                href="https://github.com/Derpimort", 
+                                target="_blank",
                                 className="github"
                             )
                         ),
                         html.Li(
                             html.A(
                                 html.I(className="fa fa-linkedin"), 
-                                href="https://www.linkedin.com/in/derpimort/",
+                                href="https://www.linkedin.com/in/derpimort/", 
+                                target="_blank",
                                 className="linkedin"
                             )
                         )
@@ -31,6 +33,7 @@ footer = html.Footer([
                             html.A(
                                 html.I(className="fa fa-github"), 
                                 href="https://github.com/ProsusAI/finBERT",
+                                target="_blank",
                                 className="github"
                             )
                         )], className="social-icons")
