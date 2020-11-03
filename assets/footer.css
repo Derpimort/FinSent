@@ -62,7 +62,7 @@
 }
 .site-footer .social-icons
 {
-  text-align:right
+  text-align:center
 }
 .site-footer .social-icons a
 {
@@ -99,8 +99,8 @@
 .social-icons
 {
   padding-left:0;
-  margin-bottom:0;
-  list-style:none
+  margin: 0 auto;
+  list-style:none;
 }
 .social-icons li
 {
@@ -153,6 +153,10 @@
 .social-icons a.linkedin:hover
 {
   background-color:#007bb6
+}
+.social-icons a.github:hover
+{
+  background-color:#24292e
 }
 .social-icons a.dribbble:hover
 {
