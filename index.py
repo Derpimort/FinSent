@@ -5,10 +5,23 @@ from dash.dependencies import Input, Output
 from app import app
 from apps import home, stonk, daily
 
+# Epic guy -> https://codepen.io/scanfcode/pen/MEZPNd
+footer = html.Footer([
+            html.Div([
+                html.Div([
+                    html.H6("By Derpimort")
+                ], className="row center"),
+                html.Hr(),
+                html.Div([
+                    html.H6("FinBERT Links")
+                ], className="row center")
+            ], className="container")
+        ], className="site-footer")
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=True),
-    html.Div(id='page-content')
+    html.Div(id='page-content'),
+    footer
 ])
 
 
