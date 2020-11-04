@@ -24,8 +24,7 @@ from finsent.constants import DATA_DIR, STOCKS_DIR
 from app import app
 
 # stocks list
-stocks = pd.read_csv(
-    DATA_DIR+"ind_nifty500list.csv")[['Symbol', 'Company Name']]
+stocks = pd.read_csv(DATA_DIR+"ind_nifty_selected.csv")[['Symbol', 'Company Name']]
 
 # Dashboard components layout
 layout = html.Div(children=[
