@@ -7,6 +7,8 @@ from apps import home, stonk, daily
 
 from static_elements import footer
 
+server = app.server
+
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=True),

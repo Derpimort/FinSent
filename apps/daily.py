@@ -28,8 +28,8 @@ def get_df(df, prev_df=None):
         prev_df = pd.read_csv(os.path.join(STOCKS_DIR, "%s.csv" % prev_df))
 
         # Get stock industries
-        stocks = pd.read_csv(DATA_DIR+"ind_nifty500list.csv")
-        df = stocks[['Symbol', 'Industry']].merge(df, on="Symbol")
+        stocks = pd.read_csv(DATA_DIR+"ind_nifty_selected.csv")
+        df = stocks[['Symbol','Industry']].merge(df, on="Symbol")
 
         # Compare last 2 scores to get delta
         df = df.merge(prev_df.set_index('Symbol')[
