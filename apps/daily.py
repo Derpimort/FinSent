@@ -19,24 +19,29 @@ from finsent.constants import DATA_DIR, STOCKS_DIR
 
 from app import app
 
+
 def get_df(df, prev_df=None):
     """ Return df with delta metrics if prev_df is not None """
-    df = pd.read_csv(os.path.join(STOCKS_DIR, "%s.csv"%df))
+    df = pd.read_csv(os.path.join(STOCKS_DIR, "%s.csv" % df))
 
     if prev_df:
-        prev_df = pd.read_csv(os.path.join(STOCKS_DIR, "%s.csv"%prev_df))
+        prev_df = pd.read_csv(os.path.join(STOCKS_DIR, "%s.csv" % prev_df))
 
         # Get stock industries
         stocks = pd.read_csv(DATA_DIR+"ind_nifty_selected.csv")
         df = stocks[['Symbol','Industry']].merge(df, on="Symbol")
 
         # Compare last 2 scores to get delta
-        df = df.merge(prev_df.set_index('Symbol')['avg_sentiment_score'], on='Symbol')
-        df['delta'] = ((df['avg_sentiment_score_x']-df['avg_sentiment_score_y'])/df['avg_sentiment_score_x'])*100
-        df=df.drop('avg_sentiment_score_y', axis=1)
-        df['delta_status'] = df['delta'].apply(lambda x: 'Increased' if x>0 else 'Stable' if x==0 else 'Decreased')
-    
+        df = df.merge(prev_df.set_index('Symbol')[
+                      'avg_sentiment_score'], on='Symbol')
+        df['delta'] = ((df['avg_sentiment_score_x'] -
+                        df['avg_sentiment_score_y'])/df['avg_sentiment_score_x'])*100
+        df = df.drop('avg_sentiment_score_y', axis=1)
+        df['delta_status'] = df['delta'].apply(
+            lambda x: 'Increased' if x > 0 else 'Stable' if x == 0 else 'Decreased')
+
     return df
+
 
 def empty_plot(label_annotation):
     '''
@@ -87,20 +92,22 @@ def empty_plot(label_annotation):
     # END
     return fig
 
+
 def delta_bar_chart(df):
     colors = {
-    'Increased':"#55a868",
-    'Decreased':"#c44e52",
-    'Stable': "#000000"
+        'Increased': "#55a868",
+        'Decreased': "#c44e52",
+        'Stable': "#000000"
     }
-    fig = px.bar(df, 
-            y='Symbol', 
-            x='delta', 
-            color='delta_status', 
-            orientation='h', 
-            color_discrete_map=colors)
+    fig = px.bar(df,
+                 y='Symbol',
+                 x='delta',
+                 color='delta_status',
+                 orientation='h',
+                 color_discrete_map=colors)
     fig.update_yaxes(categoryorder="total ascending")
     return fig
+
 
 # Get all data files
 dfs = []
@@ -115,7 +122,7 @@ df = None
 # Bar chart depicting stock sentiment delta
 fig = None
 
-if len(dfs) == 0 :
+if len(dfs) == 0:
     print("No csv files found, Please run main.py atleast once before running dashboards")
     exit(0)
 elif len(dfs) < 2:
@@ -144,8 +151,8 @@ layout = html.Div([
         selected_columns=[],
         selected_rows=[],
         page_action="native",
-        page_current= 0,
-        page_size= 10,
+        page_current=0,
+        page_size=10,
     ),
     html.Div([
         dcc.Slider(
@@ -153,7 +160,8 @@ layout = html.Div([
             min=dfs_pd.min(),
             max=dfs_pd.max(),
             value=dfs_pd.max(),
-            marks={(i):{'label': pd.to_datetime(i).strftime('%d-%m'), "style": {"transform": "rotate(45deg)"}} for i in dfs_pd[1::(len(dfs_pd)//20)+1]},
+            marks={(i): {'label': pd.to_datetime(i).strftime(
+                '%d-%m'), "style": {"transform": "rotate(45deg)"}} for i in dfs_pd[1::(len(dfs_pd)//20)+1]},
             step=None
         )
     ]),
@@ -171,9 +179,10 @@ layout = html.Div([
     )
 ])
 
+
 @app.callback(
     [Output('datatable-interactivity', 'data'),
-    Output('delta_bar_chart', 'figure')],
+     Output('delta_bar_chart', 'figure')],
     [Input('date-slider', 'value')]
 )
 def update_table(selected_date):
@@ -184,15 +193,17 @@ def update_table(selected_date):
     fig = delta_bar_chart(df)
     return df.to_dict('records'), fig
 
+
 @app.callback(
     Output('datatable-interactivity', 'style_data_conditional'),
     [Input('datatable-interactivity', 'selected_columns')]
 )
 def update_styles(selected_columns):
     return [{
-        'if': { 'column_id': i },
+        'if': {'column_id': i},
         'background_color': '#D2F3FF'
     } for i in selected_columns]
+
 
 @app.callback(
     Output('datatable-interactivity-container', "children"),
@@ -218,15 +229,16 @@ def update_graphs(rows, derived_virtual_selected_rows):
     graphs = []
     index = 0
     N_COLS = 6
-    N_COLS_str = "two" # 12//N_COLS
-    current_row=[]
+    N_COLS_str = "two"  # 12//N_COLS
+    current_row = []
     # ["Industry", "negative", "neutral", "positive", "articles", "avg_sentiment_score_x", 'delta']
     for column in ["negative", "neutral", "positive", "articles", "avg_sentiment_score_x", 'delta']:
         if column in dff:
-            if index%N_COLS==0 and index!=0:
-                row = html.Div(current_row[index-N_COLS:index], className="row")
+            if index % N_COLS == 0 and index != 0:
+                row = html.Div(
+                    current_row[index-N_COLS:index], className="row")
                 graphs.append(row)
-            
+
             current_row.append(
                 html.Div([
                     dcc.Graph(
@@ -251,15 +263,14 @@ def update_graphs(rows, derived_virtual_selected_rows):
                             },
                         },
                     )
-                ], className="%s columns"%N_COLS_str)
-                
+                ], className="%s columns" % N_COLS_str)
+
             )
-            index+=1
+            index += 1
     if not graphs:
         row = html.Div(current_row[index-N_COLS:index], className="row")
         graphs.append(row)
     return graphs
-
 
 
 if __name__ == '__main__':

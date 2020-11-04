@@ -6,10 +6,11 @@
 
 from newsapi import NewsApiClient
 
+
 class Api(NewsApiClient):
     """ 
     Override NewsApi class to support apikey from file and a custom news getter function
-    
+
     ...
 
     Attributes
@@ -22,6 +23,7 @@ class Api(NewsApiClient):
     get_topn(keywords, date)
         get top100 articles from the NewsApi
     """
+
     def __init__(self, apikey):
         """
         Parameters
@@ -34,7 +36,7 @@ class Api(NewsApiClient):
                 apikey = apikeyf.readline().strip()
 
         super().__init__(api_key=apikey)
-    
+
     def get_topn(self, keywords, date):
         """
         Parameters
@@ -52,9 +54,9 @@ class Api(NewsApiClient):
         query = " OR ".join(keywords.split(","))
 
         top_news = super().get_everything(q=query,
-                        from_param=date,
-                        to=date,
-                        sort_by='relevancy',
-                        page_size=100)
+                                          from_param=date,
+                                          to=date,
+                                          sort_by='relevancy',
+                                          page_size=100)
 
         return top_news['articles']
