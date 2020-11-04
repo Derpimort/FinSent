@@ -101,8 +101,8 @@ class Config(object):
         self.seed = seed
         self.gradient_accumulation_steps = gradient_accumulation_steps
         self.output_mode = output_mode
-        self.fp16 = fp16   
-        self.discriminate = discriminate        
+        self.fp16 = fp16
+        self.discriminate = discriminate
         self.gradual_unfreeze = gradual_unfreeze
         self.encoder_no = encoder_no
 
@@ -136,7 +136,8 @@ class FinBert(object):
         }
 
         if self.config.local_rank == -1 or self.config.no_cuda:
-            self.device = torch.device("cuda" if torch.cuda.is_available() and not self.config.no_cuda else "cpu")
+            self.device = torch.device(
+                "cuda" if torch.cuda.is_available() and not self.config.no_cuda else "cpu")
             self.n_gpu = torch.cuda.device_count()
         else:
             torch.cuda.set_device(self.config.local_rank)
@@ -161,16 +162,17 @@ class FinBert(object):
             torch.cuda.manual_seed_all(self.config.seed)
 
         if os.path.exists(self.config.model_dir) and os.listdir(self.config.model_dir):
-            raise ValueError("Output directory ({}) already exists and is not empty.".format(self.config.model_dir))
+            raise ValueError("Output directory ({}) already exists and is not empty.".format(
+                self.config.model_dir))
         if not os.path.exists(self.config.model_dir):
             os.makedirs(self.config.model_dir)
-
 
         self.processor = self.processors['finsent']()
         self.num_labels = len(label_list)
         self.label_list = label_list
 
-        self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", do_lower_case=self.config.do_lower_case)
+        self.tokenizer = BertTokenizer.from_pretrained(
+            "bert-base-uncased", do_lower_case=self.config.do_lower_case)
 
     def get_data(self, phase):
         """
@@ -195,13 +197,15 @@ class FinBert(object):
         self.num_train_optimization_steps = int(
             len(
                 examples) / self.config.train_batch_size / self.config.gradient_accumulation_steps) * self.config.num_train_epochs
-        
-        if phase=='train':
-            train = pd.read_csv(os.path.join(self.config.data_dir, 'train.csv'),sep='\t',index_col=False)
+
+        if phase == 'train':
+            train = pd.read_csv(os.path.join(
+                self.config.data_dir, 'train.csv'), sep='\t', index_col=False)
             weights = list()
             labels = self.label_list
-    
-            class_weights = [train.shape[0] / train[train.label == label].shape[0] for label in labels]
+
+            class_weights = [
+                train.shape[0] / train[train.label == label].shape[0] for label in labels]
             self.class_weights = torch.tensor(class_weights)
 
         return examples
@@ -266,20 +270,17 @@ class FinBert(object):
 
             optimizer_grouped_parameters.extend(encoder_params)
 
-
         else:
             param_optimizer = list(model.named_parameters())
 
             optimizer_grouped_parameters = [
                 {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)],
                  'weight_decay': 0.01},
-                {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+                {'params': [p for n, p in param_optimizer if any(
+                    nd in n for nd in no_decay)], 'weight_decay': 0.0}
             ]
 
-
         schedule = "warmup_linear"
-
-
 
         self.optimizer = BertAdam(optimizer_grouped_parameters,
                                   lr=self.config.learning_rate,
@@ -318,21 +319,29 @@ class FinBert(object):
         logger.info("  Num steps = %d", self.num_train_optimization_steps)
 
         # Load the data, make it into TensorDataset
-        all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
-        all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
-        all_segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
+        all_input_ids = torch.tensor(
+            [f.input_ids for f in features], dtype=torch.long)
+        all_input_mask = torch.tensor(
+            [f.input_mask for f in features], dtype=torch.long)
+        all_segment_ids = torch.tensor(
+            [f.segment_ids for f in features], dtype=torch.long)
 
         if self.config.output_mode == "classification":
-            all_label_ids = torch.tensor([f.label_id for f in features], dtype=torch.long)
+            all_label_ids = torch.tensor(
+                [f.label_id for f in features], dtype=torch.long)
         elif self.config.output_mode == "regression":
-            all_label_ids = torch.tensor([f.label_id for f in features], dtype=torch.float)
+            all_label_ids = torch.tensor(
+                [f.label_id for f in features], dtype=torch.float)
 
         try:
-            all_agree_ids = torch.tensor([f.agree for f in features], dtype=torch.long)
+            all_agree_ids = torch.tensor(
+                [f.agree for f in features], dtype=torch.long)
         except:
-            all_agree_ids = torch.tensor([0.0 for f in features], dtype=torch.long)
+            all_agree_ids = torch.tensor(
+                [0.0 for f in features], dtype=torch.long)
 
-        data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_agree_ids)
+        data = TensorDataset(all_input_ids, all_input_mask,
+                             all_segment_ids, all_label_ids, all_agree_ids)
 
         # Distributed, if necessary
         if phase == 'train':
@@ -340,7 +349,8 @@ class FinBert(object):
         elif phase == 'eval':
             my_sampler = SequentialSampler(data)
 
-        dataloader = DataLoader(data, sampler=my_sampler, batch_size=self.config.train_batch_size)
+        dataloader = DataLoader(data, sampler=my_sampler,
+                                batch_size=self.config.train_batch_size)
         return dataloader
 
     def train(self, train_examples, model):
@@ -359,13 +369,10 @@ class FinBert(object):
         model: BertModel
             The trained model.
         """
-        
-        
+
         validation_examples = self.get_data('validation')
 
         global_step = 0
-
-
 
         self.validation_losses = []
 
@@ -375,7 +382,6 @@ class FinBert(object):
         model.train()
 
         step_number = len(train_dataloader)
-
 
         i = 0
         for _ in trange(int(self.config.num_train_epochs), desc="Epoch"):
@@ -416,8 +422,9 @@ class FinBert(object):
                 weights = self.class_weights.to(self.device)
 
                 if self.config.output_mode == "classification":
-                    loss_fct = CrossEntropyLoss(weight = weights)
-                    loss = loss_fct(logits.view(-1, self.num_labels), label_ids.view(-1))
+                    loss_fct = CrossEntropyLoss(weight=weights)
+                    loss = loss_fct(
+                        logits.view(-1, self.num_labels), label_ids.view(-1))
                 elif self.config.output_mode == "regression":
                     loss_fct = MSELoss()
                     loss = loss_fct(logits.view(-1), label_ids.view(-1))
@@ -442,7 +449,8 @@ class FinBert(object):
 
             # Validation
 
-            validation_loader = self.get_loader(validation_examples, phase='eval')
+            validation_loader = self.get_loader(
+                validation_examples, phase='eval')
             model.eval()
 
             valid_loss, valid_accuracy = 0, 0
@@ -460,10 +468,12 @@ class FinBert(object):
 
                     if self.config.output_mode == "classification":
                         loss_fct = CrossEntropyLoss(weight=weights)
-                        tmp_valid_loss = loss_fct(logits.view(-1, self.num_labels), label_ids.view(-1))
+                        tmp_valid_loss = loss_fct(
+                            logits.view(-1, self.num_labels), label_ids.view(-1))
                     elif self.config.output_mode == "regression":
                         loss_fct = MSELoss()
-                        tmp_valid_loss = loss_fct(logits.view(-1), label_ids.view(-1))
+                        tmp_valid_loss = loss_fct(
+                            logits.view(-1), label_ids.view(-1))
 
                     valid_loss += tmp_valid_loss.mean().item()
 
@@ -477,7 +487,8 @@ class FinBert(object):
             if valid_loss == min(self.validation_losses):
 
                 try:
-                    os.remove(self.config.model_dir / ('temporary' + str(best_model)))
+                    os.remove(self.config.model_dir /
+                              ('temporary' + str(best_model)))
                 except:
                     print('No best model found')
                 torch.save({'epoch': str(i), 'state_dict': model.state_dict()},
@@ -485,9 +496,11 @@ class FinBert(object):
                 best_model = i
 
         # Save a trained model and the associated configuration
-        checkpoint = torch.load(self.config.model_dir / ('temporary' + str(best_model)))
+        checkpoint = torch.load(
+            self.config.model_dir / ('temporary' + str(best_model)))
         model.load_state_dict(checkpoint['state_dict'])
-        model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
+        model_to_save = model.module if hasattr(
+            model, 'module') else model  # Only save the model it-self
         output_model_file = os.path.join(self.config.model_dir, WEIGHTS_NAME)
         torch.save(model_to_save.state_dict(), output_model_file)
         output_config_file = os.path.join(self.config.model_dir, CONFIG_NAME)
@@ -539,10 +552,12 @@ class FinBert(object):
 
                 if self.config.output_mode == "classification":
                     loss_fct = CrossEntropyLoss()
-                    tmp_eval_loss = loss_fct(logits.view(-1, self.num_labels), label_ids.view(-1))
+                    tmp_eval_loss = loss_fct(
+                        logits.view(-1, self.num_labels), label_ids.view(-1))
                 elif self.config.output_mode == "regression":
                     loss_fct = MSELoss()
-                    tmp_eval_loss = loss_fct(logits.view(-1), label_ids.view(-1))
+                    tmp_eval_loss = loss_fct(
+                        logits.view(-1), label_ids.view(-1))
 
                 np_logits = logits.cpu().numpy()
 
@@ -575,7 +590,8 @@ class FinBert(object):
             # eval_loss += tmp_eval_loss.mean().item()
             # eval_accuracy += tmp_eval_accuracy
 
-        evaluation_df = pd.DataFrame({'predictions': predictions, 'labels': labels, "agree_levels": agree_levels})
+        evaluation_df = pd.DataFrame(
+            {'predictions': predictions, 'labels': labels, "agree_levels": agree_levels})
 
         return evaluation_df
 
@@ -602,33 +618,39 @@ def predict(text, model, write_to_csv=False, path=None):
 
     label_list = ['positive', 'negative', 'neutral']
     label_dict = {0: 'positive', 1: 'negative', 2: 'neutral'}
-    result = pd.DataFrame(columns=['sentence','logit','prediction','sentiment_score'])
+    result = pd.DataFrame(
+        columns=['sentence', 'logit', 'prediction', 'sentiment_score'])
     for batch in chunks(sentences, 5):
 
-        examples = [InputExample(str(i), sentence) for i, sentence in enumerate(batch)]
+        examples = [InputExample(str(i), sentence)
+                    for i, sentence in enumerate(batch)]
 
-        features = convert_examples_to_features(examples, label_list, 64, tokenizer)
+        features = convert_examples_to_features(
+            examples, label_list, 64, tokenizer)
 
-        all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
-        all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
-        all_segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
+        all_input_ids = torch.tensor(
+            [f.input_ids for f in features], dtype=torch.long)
+        all_input_mask = torch.tensor(
+            [f.input_mask for f in features], dtype=torch.long)
+        all_segment_ids = torch.tensor(
+            [f.segment_ids for f in features], dtype=torch.long)
 
         with torch.no_grad():
             logits = model(all_input_ids, all_segment_ids, all_input_mask)
             logits = softmax(np.array(logits))
-            sentiment_score = pd.Series(logits[:,0] - logits[:,1])
+            sentiment_score = pd.Series(logits[:, 0] - logits[:, 1])
             predictions = np.squeeze(np.argmax(logits, axis=1))
 
             batch_result = {'sentence': batch,
                             'logit': list(logits),
                             'prediction': predictions,
-                            'sentiment_score':sentiment_score}
-            
+                            'sentiment_score': sentiment_score}
+
             batch_result = pd.DataFrame(batch_result)
-            result = pd.concat([result,batch_result], ignore_index=True)
+            result = pd.concat([result, batch_result], ignore_index=True)
 
     result['prediction'] = result.prediction.apply(lambda x: label_dict[x])
     if write_to_csv:
-        result.to_csv(path,sep=',', index=False)
+        result.to_csv(path, sep=',', index=False)
 
     return result

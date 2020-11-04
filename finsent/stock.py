@@ -7,10 +7,11 @@
 import pandas as pd
 import yfinance as yf
 
+
 class Stock:
     """ 
     Class to store stock data for each symbol, easier accesibility for post processing funcs and data
-    
+
     ...
 
     Attributes
@@ -33,7 +34,7 @@ class Stock:
     --------
     write_csv(self, fname, articles=None)
         write sentiment df to given file
-    
+
     Getters and Setters for sentiment df, ticker data
     """
 
@@ -51,11 +52,11 @@ class Stock:
                 if True, will automatically get ticker from yahoo finance api using stock symbol.
                 By default append .NS for indian stocks. Default False
         """
-        self.sentiment=None
-        self.avg_score=0
-        self.ticker=None
-        self.monthly_recommendations=None
-        self.yearly_recommendations=None
+        self.sentiment = None
+        self.avg_score = 0
+        self.ticker = None
+        self.monthly_recommendations = None
+        self.yearly_recommendations = None
         # Will inherit from yfinance Ticker later for efficient usage... might not need to though.
         self.symbol = symbol
         self.name = name
@@ -63,8 +64,7 @@ class Stock:
             self.setSentiment(sentiment)
         if ticker:
             self.ticker = yf.Ticker(symbol+".NS")
-        
-    
+
     def setSentiment(self, sentiment):
         """
         Parameters
@@ -82,7 +82,7 @@ class Stock:
         -----------
         ticker: yf.Ticker
             Yahoo finance ticker for given stock, useful in getting market history.
-            
+
         """
         self.ticker = ticker
 
@@ -94,13 +94,13 @@ class Stock:
                             Recommendations df from yf.Ticker.recommendations
 
         """
-        self.monthly_recommendations = (recommendations.loc[pd.to_datetime('today') - 
-                                        pd.DateOffset(months=1):]['To Grade']
+        self.monthly_recommendations = (recommendations.loc[pd.to_datetime('today') -
+                                                            pd.DateOffset(months=1):]['To Grade']
                                         .value_counts(normalize=True) * 100).to_dict()
-        self.yearly_recommendations = (recommendations.loc[pd.to_datetime('today') - 
-                                        pd.DateOffset(years=1):]['To Grade']
-                                        .value_counts(normalize=True) * 100).to_dict()
-    
+        self.yearly_recommendations = (recommendations.loc[pd.to_datetime('today') -
+                                                           pd.DateOffset(years=1):]['To Grade']
+                                       .value_counts(normalize=True) * 100).to_dict()
+
     def write_csv(self, fname, articles=None):
         """
         Parameters
@@ -113,7 +113,8 @@ class Stock:
         if articles is None:
             self.sentiment.to_csv(fname, index=False)
         else:
-            articles.join(self.sentiment[['prediction', 'sentiment_score']]).to_csv(fname, index=False)
+            articles.join(self.sentiment[['prediction', 'sentiment_score']]).to_csv(
+                fname, index=False)
 
     def getStockData(self, period="1y"):
         """
@@ -132,19 +133,20 @@ class Stock:
         sentiment_dict: dict
                         dictionary containing aggregated sentiment data.
         """
-        sentiment_dict={'Symbol':self.symbol,
-                        'avg_sentiment_score':self.avg_score,  
-                        'articles': len(self.sentiment),
-                        'negative':0,
-                        'neutral':0,
-                        'positive':0}
-        sentiment_dict.update((self.sentiment['prediction'].value_counts(normalize=True) * 100).to_dict())
-            
+        sentiment_dict = {'Symbol': self.symbol,
+                          'avg_sentiment_score': self.avg_score,
+                          'articles': len(self.sentiment),
+                          'negative': 0,
+                          'neutral': 0,
+                          'positive': 0}
+        sentiment_dict.update(
+            (self.sentiment['prediction'].value_counts(normalize=True) * 100).to_dict())
+
         return sentiment_dict
 
     def __str__(self):
-        return  "\n".join([
-                "Name: %s"%self.name,
-                "Symbol: %s"%self.symbol,
-                "Sentiment: %s"%str(self.sentiment),
-                "Avg_sentiment: %f"%self.avg_score])
+        return "\n".join([
+            "Name: %s" % self.name,
+            "Symbol: %s" % self.symbol,
+            "Sentiment: %s" % str(self.sentiment),
+            "Avg_sentiment: %f" % self.avg_score])

@@ -24,7 +24,8 @@ from finsent.constants import DATA_DIR, STOCKS_DIR
 from app import app
 
 # stocks list
-stocks = pd.read_csv(DATA_DIR+"ind_nifty500list.csv")[['Symbol', 'Company Name']]
+stocks = pd.read_csv(
+    DATA_DIR+"ind_nifty500list.csv")[['Symbol', 'Company Name']]
 
 # Dashboard components layout
 layout = html.Div(children=[
@@ -42,10 +43,11 @@ layout = html.Div(children=[
             html.Div([
                 html.H5("Select stock"),
                 dcc.Dropdown(
-                id='select_stock',
-                options=[{'label': "%s - %s"%(sym, name), 'value': sym} for sym, name in stocks.values],
-                value='RELIANCE'
-            )
+                    id='select_stock',
+                    options=[
+                        {'label': "%s - %s" % (sym, name), 'value': sym} for sym, name in stocks.values],
+                    value='RELIANCE'
+                )
             ]),
         ], className="six columns")
     ], className="row"),
@@ -68,39 +70,42 @@ layout = html.Div(children=[
             dash_table.DataTable(
                 id='stock_data_table',
                 style_cell={
-                # all three widths are needed
-                'minWidth': '180px', 'width': '180px', 'maxWidth': '180px',
-                'height': 'auto',
-                'whiteSpace': 'normal'
+                    # all three widths are needed
+                    'minWidth': '180px', 'width': '180px', 'maxWidth': '180px',
+                    'height': 'auto',
+                    'whiteSpace': 'normal'
                 },
-                columns = [{"name": i, "id": i, "presentation": "markdown"} for i in ['title', 'publishedAt', 'prediction',
-            'sentiment_score']],
+                columns=[{"name": i, "id": i, "presentation": "markdown"} for i in ['title', 'publishedAt', 'prediction',
+                                                                                    'sentiment_score']],
                 sort_action="native",
                 sort_mode="multi",
                 page_action="native",
-                page_current= 0,
-                page_size= 10,
+                page_current=0,
+                page_size=10,
             )
         ]
     )
-    
+
 ])
 
 # Update function on stock selection from dropdown
+
+
 @app.callback(
     [Output('stock_data_graph', 'figure'),
-    Output('stock_sentiment_guage', 'figure'),
-    Output('stock_data_table', 'data'),
-    Output('stock_symbol', 'children'),
-    Output('stock_name', 'children')],
+     Output('stock_sentiment_guage', 'figure'),
+     Output('stock_data_table', 'data'),
+     Output('stock_symbol', 'children'),
+     Output('stock_name', 'children')],
     [Input('select_stock', 'value')]
 )
 def update(dropdown):
-    
+
     symbol = 'RELIANCE' if not dropdown else dropdown
-    name = stocks[stocks['Symbol']==symbol]['Company Name'].iloc[0]
+    name = stocks[stocks['Symbol'] == symbol]['Company Name'].iloc[0]
 
     return get_graphs(symbol, name)
+
 
 def get_graphs(symbol, name):
     """
@@ -110,7 +115,7 @@ def get_graphs(symbol, name):
                 stock symbol
         name:   str
                 stock name
-        
+
         Returns
         --------
         stock_fig:  plotly.graph_objects.Figure
@@ -132,14 +137,15 @@ def get_graphs(symbol, name):
         stock = stocks[stocks['Company Name'].str.contains(name)].iloc[0]
     symbol = stock['Symbol']
     name = stock['Company Name']
-    
+
     # read dataframes
-    data_df = pd.read_csv(os.path.join(STOCKS_DIR, "%s/full.csv"%symbol))
+    data_df = pd.read_csv(os.path.join(STOCKS_DIR, "%s/full.csv" % symbol))
     data_df = data_df.sort_values('Date')
 
     # Read latest available data
     latest = data_df.iloc[-1]
-    latest_df = pd.read_csv(os.path.join(STOCKS_DIR, "%s/%s.csv"%(symbol,latest['Date'])))
+    latest_df = pd.read_csv(os.path.join(
+        STOCKS_DIR, "%s/%s.csv" % (symbol, latest['Date'])))
 
     # Get ticker data and sentiment
     stock = Stock(symbol, name, sentiment=latest_df, ticker=True)
@@ -148,10 +154,14 @@ def get_graphs(symbol, name):
 
     # get graphs and tabledata
     stock_fig = stock_graph(df, symbol, data_df)
-    avg_sentiment_fig = avg_sentiment_graph(stock.avg_score, data_df.iloc[-2]['Score'])
-    latest_df['title'] = '[' + latest_df['title'].astype(str) + '](' + latest_df['url'].astype(str) + ')'
+    avg_sentiment_fig = avg_sentiment_graph(
+        stock.avg_score, data_df.iloc[-2]['Score'])
+    latest_df['title'] = '[' + \
+        latest_df['title'].astype(
+            str) + '](' + latest_df['url'].astype(str) + ')'
 
     return stock_fig, avg_sentiment_fig, latest_df.drop(['description', 'url'], axis=1).to_dict('records'), symbol, name
+
 
 def stock_graph(df, symbol, data_df):
     data_df['Date'] = pd.to_datetime(data_df['Date'])
@@ -167,7 +177,7 @@ def stock_graph(df, symbol, data_df):
         line=dict(width=0.5, color='rgb(111, 231, 219)'),
         stackgroup='one',
         name="positive",
-        groupnorm='percent' # sets the normalization for the sum of the stackgroup
+        groupnorm='percent'  # sets the normalization for the sum of the stackgroup
     ), secondary_y=False)
     fig.add_trace(go.Scatter(
         x=x, y=data_df['neutral'],
@@ -185,9 +195,9 @@ def stock_graph(df, symbol, data_df):
     ), secondary_y=False)
 
     fig.add_trace(go.Scatter(x=x, y=data_df['Close'],
-                        mode='lines+markers',
-                        name='Close',
-                        connectgaps=True), secondary_y=True)
+                             mode='lines+markers',
+                             name='Close',
+                             connectgaps=True), secondary_y=True)
 
     fig.update_layout(
         showlegend=True,
@@ -215,24 +225,25 @@ def stock_graph(df, symbol, data_df):
 
 def avg_sentiment_graph(avg_sentiment, reference_score):
     fig = go.Figure(go.Indicator(
-        domain = {'x': [0, 1], 'y': [0, 1]},
-        value = avg_sentiment,
-        mode = "gauge+number+delta",
-        title = {'text': "Average Sentiment Score w/ Delta"},
-        delta = {'reference': reference_score},
-        gauge = {'axis': {'range': [-1, 1]},
-                'bar': {'color': "#4878d0"},
-                'steps' : [
-                    {'range': [-1, -0.3], 'color': "#ff9f9b"},
-                    {'range': [-0.3, 0.3], 'color': "#fffea3"},
-                    {'range': [0.3, 1], 'color': "#8de5a1"}],
-                #'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 490}
-                }),
-                )
+        domain={'x': [0, 1], 'y': [0, 1]},
+        value=avg_sentiment,
+        mode="gauge+number+delta",
+        title={'text': "Average Sentiment Score w/ Delta"},
+        delta={'reference': reference_score},
+        gauge={'axis': {'range': [-1, 1]},
+               'bar': {'color': "#4878d0"},
+               'steps': [
+            {'range': [-1, -0.3], 'color': "#ff9f9b"},
+            {'range': [-0.3, 0.3], 'color': "#fffea3"},
+            {'range': [0.3, 1], 'color': "#8de5a1"}],
+            # 'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 490}
+        }),
+    )
 
     return fig
+
 
 if __name__ == '__main__':
     app.layout = layout
     # host 0.0.0.0 for docker
-    app.run_server(host='0.0.0.0',debug=True)
+    app.run_server(host='0.0.0.0', debug=True)
