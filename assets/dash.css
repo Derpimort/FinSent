@@ -33,6 +33,8 @@
     background: #2f2f2f;
     padding: 10px;
     height: 100%;
+    height: 100vh;
+    padding-top: 50px;
 }
 
 .left-border{

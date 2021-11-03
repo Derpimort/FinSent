@@ -12,6 +12,5 @@ layout = html.Div(
         dcc.Link("Individual stock analysis",
                  href="/stonk", className="button")
     ],
-    style={"height": "100vh", "padding-top": "50px", "text-align": "center"},
-    className="container"
+    className="dark-container"
 )
