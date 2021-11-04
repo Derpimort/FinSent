@@ -20,7 +20,7 @@ class DailyData(BaseData):
         self.dfs = dfs
         self.df = None
         self._init_data()
-        self.dfs_pd = pd.to_datetime(dfs).astype(np.int64)
+        self.dfs_pd = pd.Series(pd.to_datetime(dfs).astype(np.int64))
 
     def _init_data(self):
         if len(self.dfs) == 0:
@@ -61,6 +61,9 @@ class DailyData(BaseData):
         self.df = df.copy()
 
         return df
+    
+    def get_timestamps(self):
+        return list(self.dfs_pd[1::(len(self.dfs_pd)//20)+1])
 
 if __name__=="__main__":
     data_helper = DailyData("data/", "data/Stonks")
