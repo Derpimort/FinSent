@@ -173,7 +173,7 @@ blockquote {
 /* Links
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 a {
-  color: #1EAEDB; 
+  color: #ae966d; 
   text-decoration: underline;
   cursor: pointer;}
 a:hover {
@@ -214,7 +214,7 @@ button:focus,
 input[type="submit"]:focus,
 input[type="reset"]:focus,
 input[type="button"]:focus {
-  background-color: #0FA0CE;
+  background-color: #ae966d;
   border-color: #888;
   outline: 0; }
 .button.button-primary,
@@ -223,8 +223,8 @@ input[type="submit"].button-primary,
 input[type="reset"].button-primary,
 input[type="button"].button-primary {
   color: #FFF;
-  background-color: #33C3F0;
-  border-color: #33C3F0; }
+  background-color: #ae966d;
+  border-color: #ae966d; }
 .button.button-primary:hover,
 button.button-primary:hover,
 input[type="submit"].button-primary:hover,
@@ -236,8 +236,8 @@ input[type="submit"].button-primary:focus,
 input[type="reset"].button-primary:focus,
 input[type="button"].button-primary:focus {
   color: #FFF;
-  background-color: #1EAEDB;
-  border-color: #1EAEDB; }
+  background-color: #8b7857;
+  border-color: #8b7857; }
 
 
 /* Forms
@@ -285,7 +285,7 @@ input[type="url"]:focus,
 input[type="password"]:focus,
 textarea:focus,
 select:focus {
-  border: 1px solid #0FA0CE;
+  border: 1px solid #8b7857;
   outline: 0; }
 label,
 legend {
