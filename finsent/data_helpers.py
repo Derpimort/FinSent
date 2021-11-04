@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import logging
+from finsent.constants import ALL_COLUMNS
 
 class BaseData:
     pass
@@ -19,7 +20,7 @@ class DailyData(BaseData):
         self.dfs = dfs
         self.df = None
         self._init_data()
-        #dfs_pd = pd.to_datetime(dfs).astype(np.int64)
+        self.dfs_pd = pd.to_datetime(dfs).astype(np.int64)
 
     def _init_data(self):
         if len(self.dfs) == 0:
@@ -37,7 +38,7 @@ class DailyData(BaseData):
         if (not reprocess) and (self.df is not None):
             return self.df
 
-        df = pd.read_csv(os.path.join(self.stonks_dir, "%s.csv" % df))
+        df = pd.read_csv(os.path.join(self.stonks_dir, "%s.csv" % df))[:10]
 
         if prev_df:
             prev_df = pd.read_csv(os.path.join(self.stonks_dir, "%s.csv" % prev_df))
@@ -54,8 +55,10 @@ class DailyData(BaseData):
             df = df.drop('avg_sentiment_score_y', axis=1)
             df['delta_status'] = df['delta'].apply(
                 lambda x: 'Increased' if x > 0 else 'Stable' if x == 0 else 'Decreased')
-        
-        self.df = df
+
+        df = df.round(2)
+        df.columns = ALL_COLUMNS
+        self.df = df.copy()
 
         return df
 
