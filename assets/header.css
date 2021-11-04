@@ -1,0 +1,46 @@
+.site-header
+{
+  background-color:#26272b;
+  padding:15px;
+  font-size:15px;
+  line-height:24px;
+  color:#ae966d;
+  text-align:left;
+  margin-bottom: 16px;
+}
+
+.site-header hr
+{
+  border-top:2px solid #d6cab6;
+  opacity:0.5;
+  margin: 0px;
+}
+.site-header hr.small
+{
+  margin:20px 0
+}
+.site-header h1
+{
+  color:#ae966d;
+  font-size:34px;
+  font-weight:400px;
+  margin:5px 0 0;
+  letter-spacing:2px
+}
+.site-header h4
+{
+  color:#ae966d;
+  font-size:14px;
+  font-weight:400px;
+  letter-spacing:2px;
+  margin:10px 0 0;
+}
+.site-header a
+{
+  color:#ae966d;
+}
+.site-header a:hover
+{
+  color:#8b7857;
+  text-decoration:none;
+}

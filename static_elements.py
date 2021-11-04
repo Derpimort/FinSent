@@ -1,6 +1,13 @@
 import dash_core_components as dcc
 import dash_html_components as html
 
+HEADERS = {
+    "home":("FinSent", "A plotly-dash based stock financial sentiment analysis dashboard"),
+    "daily":("Daily Report", "Analyze average sentiment scores & it's changes across time for multiple stocks"),
+    "stonk":("Individual Stock", "An in-depth analysis of stock performance & it's sentiments across time with all affecting factors detailed"),
+    
+}
+
 # Epic guy -> https://codepen.io/scanfcode/pen/MEZPNd
 footer = html.Footer([
     html.Div([
@@ -40,3 +47,16 @@ footer = html.Footer([
         ], className="row center")
     ], className="container")
 ], className="site-footer")
+
+
+def header(page="home"):
+    heading, info = HEADERS[page]
+    return html.Div([
+            html.Div([
+                html.H1(heading),
+            ], className="row left"),
+            html.Hr(),
+            html.Div([
+                html.H4(info),
+            ], className="row left")
+        ], className="container")
