@@ -21,6 +21,17 @@ import yfinance as yf
 from pytorch_pretrained_bert.modeling import BertForSequenceClassification
 from pytorch_pretrained_bert.tokenization import BertTokenizer
 from finsent.constants import DATA_DIR, MODEL_DIR
+import logging
+
+logging.root.handlers = []
+logging.basicConfig(
+    format = "%(asctime)s %(levelname)s:%(message)s",
+    level = logging.INFO,
+    handlers = [
+        logging.FileHandler("run.log", "a"),
+        logging.StreamHandler()
+    ]
+)
 
 
 def create_dirs(df, data_dir):
@@ -60,7 +71,7 @@ def main(stonks, data_dir, MODEL_DIR=MODEL_DIR, date=None, prev_10=False):
         2. consodilated sentiment data of all stocks for given date
         3. consodilated sentiment data of each stock for all processed dates
     """
-
+    logging.info("Start processing")
     # Get today's date if date param not provided
     date = pd.to_datetime('today') if not date else pd.to_datetime(date)
     dates = []
@@ -69,8 +80,8 @@ def main(stonks, data_dir, MODEL_DIR=MODEL_DIR, date=None, prev_10=False):
         dates = [date - pd.DateOffset(days=i) for i in range(9, -1, -1)]
     else:
         dates = [date]
-
     # Get finbert model, newsapi client and tokenizer
+    logging.info("Initializing model and API")
     model = BertForSequenceClassification.from_pretrained(
         MODEL_DIR, num_labels=3, cache_dir=None)
     # apikey = ""
@@ -79,12 +90,12 @@ def main(stonks, data_dir, MODEL_DIR=MODEL_DIR, date=None, prev_10=False):
     api = Api("newsapi.key")
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-    print("Started, processing data for last %d day(s)" % len(dates))
+    logging.info("Started, processing data for last %d day(s) from %s" % (len(dates), date))
     for index, curr_date in enumerate(dates):
         result = []
         not_processed = []
         curr_date = str(curr_date.date())
-        print("Day %d date: %s" % (index+1, curr_date))
+        logging.info("Day %d date: %s" % (index+1, curr_date))
         for index, (symbol, name, keywords) in tqdm(df[['Symbol', 'Company Name', 'keywords']].iterrows(), total=len(df)):
             try:
                 # Articles df containing newsapi output
@@ -115,17 +126,19 @@ def main(stonks, data_dir, MODEL_DIR=MODEL_DIR, date=None, prev_10=False):
                 not_processed.append((symbol, e))
 
         if len(not_processed) > 0:
-            print("Following stocks not processed due to no articles or errors")
+            logging.warn("Following stocks not processed due to no articles or errors")
             for stock_sym, exception in not_processed:
-                print(stock_sym, exception)
-        print("Writing results to", os.path.join(
-            data_dir, "%s.csv" % curr_date))
+                logging.error("%s %s"%(stock_sym, exception))
+
+        logging.info("Writing results to %s"%(os.path.join(
+            data_dir, "%s.csv" % curr_date)))
         result_df = pd.DataFrame(result)
         result_df.to_csv(os.path.join(data_dir, "%s.csv" %
                                       curr_date), index=False)
 
 
 if __name__ == "__main__":
+    logging.info("Finding stonk DFs")
     stonks = pd.read_csv(DATA_DIR+"ind_nifty500list.csv")
     keywords = pd.read_csv(DATA_DIR+"keywords.csv")
     df = stonks.merge(keywords, on='Symbol')
@@ -138,5 +151,5 @@ if __name__ == "__main__":
     # Comment the following two lines to process all stocks instead of just select 3
     selected_stocks = ["ADANIPOWER", "TCS", "RELIANCE", "IDEA", "LTI", "INFY"]
     df = df[df['Symbol'].isin(selected_stocks)]
-
+    
     main(df, os.path.join(DATA_DIR, "Stonks/"), date=date)
