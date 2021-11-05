@@ -38,7 +38,7 @@ class DailyData(BaseData):
         if (not reprocess) and (self.df is not None):
             return self.df
 
-        df = pd.read_csv(os.path.join(self.stonks_dir, "%s.csv" % df))[:10]
+        df = pd.read_csv(os.path.join(self.stonks_dir, "%s.csv" % df))
 
         if prev_df:
             prev_df = pd.read_csv(os.path.join(self.stonks_dir, "%s.csv" % prev_df))

@@ -47,11 +47,14 @@ class BasePlots:
 class DailyPlots(BasePlots):
     def __init__(self, df, stonks=DEFAULT_STONKS):
         super().__init__()
+        self.update_instance(df, stonks)
+
+    def update_instance(self, df, stonks):
         req_cols = ALL_COLUMNS
 
         # Filter 
         self.df = df[req_cols].copy()
-        #self.df = self.df[self.df['Symbol'].isin(stonks)]
+        self.df = self.df[self.df['Symbol'].isin(stonks)]
     
     def get_delta_bar(self):
         colors = {
@@ -59,7 +62,7 @@ class DailyPlots(BasePlots):
             'Decreased': "#c44e52",
             'Stable': "#000000"
         }
-
+        print(self.df)
         fig = px.bar(self.df,
                         y='Symbol',
                         x='Delta',

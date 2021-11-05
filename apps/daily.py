@@ -7,7 +7,8 @@
 
 import os
 import dash
-from dash.dependencies import Input, Output
+from dash.exceptions import PreventUpdate
+from dash.dependencies import Input, Output, State
 import dash_table
 import dash_core_components as dcc
 import dash_html_components as html
@@ -53,9 +54,27 @@ layout = html.Div([
         ], className="row")
     ], className="navbar top-border"),
     html.Div([
-        dcc.Graph(id="delta-bar-chart", figure=daily_plot_helper.empty_plot(title="Delta Bar Chart"))
+        dcc.Loading([
+            html.Div([
+                dcc.Graph(id="delta-bar-chart", figure=daily_plot_helper.empty_plot())           
+            ])
+        ])
     ])
 ])
+
+@app.callback(
+    Output('delta-bar-chart', 'figure'),
+    [Input('daily-filter-submit', 'n_clicks')],
+    [State('daily-filter-stocks', 'value'),
+    State('daily-filter-date', 'value')])
+def update_charts(n_clicks, dropdown, daterange):
+    if n_clicks==0 or dropdown is None or daterange is None or len(dropdown)>10:
+        raise PreventUpdate("Invalid selection")
+    df = daily_helper.get_df(*daterange.split(" -> "))
+    daily_plot_helper.update_instance(df, dropdown)
+
+    return daily_plot_helper.get_delta_bar()
+
 
 
 if __name__ == '__main__':
