@@ -15,7 +15,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
-from finsent import data_helpers
 from finsent.constants import DATA_DIR, STOCKS_DIR, DAILY_COLUMNS
 
 from app import app
@@ -53,6 +52,9 @@ layout = html.Div([
             ], className="twelve columns")
         ], className="row")
     ], className="navbar top-border"),
+    html.Div([
+        dcc.Graph(id="delta-bar-chart", figure=daily_plot_helper.empty_plot(title="Delta Bar Chart"))
+    ])
 ])
 
 
