@@ -27,6 +27,11 @@ daily_helper = DailyData(data_dir=DATA_DIR, stonks_dir=STOCKS_DIR)
 daily_plot_helper = DailyPlots(daily_helper.df)
 
 layout = html.Div([
+    html.Div([
+        html.P("Testing")
+    ], className="navbar"),
+    html.P("""
+    TEST""")
 ])
 
 
