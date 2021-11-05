@@ -1,5 +1,6 @@
 import dash_core_components as dcc
 import dash_html_components as html
+from app import app
 
 HEADERS = {
     "home":("FinSent", "A plotly-dash based stock financial sentiment analysis dashboard"),
@@ -7,6 +8,8 @@ HEADERS = {
     "stonk":("Individual Stock", "An in-depth analysis of stock performance & it's sentiments across time with all affecting factors detailed"),
     
 }
+
+LOGO = app.get_asset_url('Spacebar_logo_circle.png')
 
 # Epic guy -> https://codepen.io/scanfcode/pen/MEZPNd
 footer = html.Footer([
@@ -53,10 +56,15 @@ def header(page="home"):
     heading, info = HEADERS[page]
     return html.Div([
             html.Div([
-                html.H1(heading),
-            ], className="row left"),
-            html.Hr(),
+                html.Img(src=LOGO),
+            ], className="oneh columns"),
             html.Div([
-                html.H4(info),
-            ], className="row left")
-        ], className="container")
+                html.Div([
+                    html.H1(heading),
+                ], className="row left"),
+                html.Hr(),
+                html.Div([
+                    html.H4(info),
+                ], className="row left")
+            ], className="ten columns")
+        ], className="row")

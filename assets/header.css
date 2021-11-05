@@ -9,6 +9,12 @@
   margin-bottom: 16px;
 }
 
+.site-header img
+{
+  border-radius: 16px;
+  width: 100%;
+}
+
 .site-header hr
 {
   border-top:2px solid #d6cab6;
