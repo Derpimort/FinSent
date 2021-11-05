@@ -137,10 +137,6 @@ body {
   background-color: #2f2f2f;
   margin: 0;}
 
-  html, body{
-    overflow-x: hidden;
-    max-width: 100%;
-  }
 
 
 /* Typography
