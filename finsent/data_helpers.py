@@ -65,6 +65,9 @@ class DailyData(BaseData):
     def get_timestamps(self):
         return list(self.dfs_pd[1::(len(self.dfs_pd)//20)+1])
 
+    def get_stonks(self):
+        return self.df['Symbol'].tolist()
+        
 if __name__=="__main__":
     data_helper = DailyData("data/", "data/Stonks")
     print(data_helper.df)

@@ -57,3 +57,8 @@
     position: sticky;
     top: 0;
 }
+
+.navbar p
+{
+    text-decoration: underline;
+}

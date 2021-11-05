@@ -28,10 +28,16 @@ daily_plot_helper = DailyPlots(daily_helper.df)
 
 layout = html.Div([
     html.Div([
-        html.P("Testing")
-    ], className="navbar"),
-    html.P("""
-    TEST""")
+        html.Div([
+            html.Div([
+                html.P("Select Stocks (Upto 10)"),
+                dcc.Dropdown(
+                    options=[{'value': i, 'label':i} for i in daily_helper.get_stonks()],
+                    multi=True
+                )
+            ], className="six columns")
+        ], className="row")
+    ], className="navbar top-border"),
 ])
 
 
