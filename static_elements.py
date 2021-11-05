@@ -4,7 +4,7 @@ from app import app
 
 HEADERS = {
     "home":("FinSent", "A plotly-dash based stock financial sentiment analysis dashboard"),
-    "daily":("Daily Report", "Analyze average sentiment scores & it's changes across time for multiple stocks"),
+    "daily":("Daily Report", "Analyze average sentiment scores & its changes across time for multiple stocks"),
     "stonk":("Individual Stock", "An in-depth analysis of stock performance & it's sentiments across time with all affecting factors detailed"),
     
 }
