@@ -20,53 +20,29 @@ class BasePlots:
             fig.update(layout_coloraxis_showscale=False)
         return fig
     
-    def empty_plot(label_annotation):
+    def empty_plot(self, label_annotation="Please select some data"):
         """
         Returns an empty plot with a centered text.
         """
-        trace1 = go.Scatter(
-            x=[],
-            y=[]
-        )
-
-        data = [trace1]
-
-        layout = go.Layout(
-            showlegend=False,
-            xaxis=dict(
-                autorange=True,
-                showgrid=False,
-                zeroline=False,
-                showline=False,
-                ticks='',
-                showticklabels=False
-            ),
-            yaxis=dict(
-                autorange=True,
-                showgrid=False,
-                zeroline=False,
-                showline=False,
-                ticks='',
-                showticklabels=False
-            ),
-            annotations=[
-                dict(
-                    x=0,
-                    y=0,
-                    xref='x',
-                    yref='y',
-                    text=label_annotation,
-                    showarrow=True,
-                    arrowhead=7,
-                    ax=0,
-                    ay=0
-                )
+        fig = go.Figure()
+        fig.update_layout(
+            xaxis =  { "visible": False },
+            yaxis = { "visible": False },
+            annotations = [
+                {   
+                    "text": label_annotation,
+                    "xref": "paper",
+                    "yref": "paper",
+                    "showarrow": False,
+                    "font": {
+                        "size": 28,
+                        "color": "#ae966d"
+                    }
+                }
             ]
         )
-
-        fig = go.Figure(data=data, layout=layout)
         # END
-        return fig
+        return self._transparent_fig(fig)
 
 class DailyPlots(BasePlots):
     def __init__(self, df, stonks=DEFAULT_STONKS):
