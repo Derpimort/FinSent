@@ -62,7 +62,7 @@ class DailyPlots(BasePlots):
             'Decreased': "#c44e52",
             'Stable': "#000000"
         }
-        print(self.df)
+        
         fig = px.bar(self.df,
                         y='Symbol',
                         x='Delta',

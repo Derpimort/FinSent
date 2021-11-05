@@ -65,8 +65,11 @@ class DailyData(BaseData):
     def get_timestamps(self):
         return list(self.dfs_pd[1::(len(self.dfs_pd)//20)+1])
 
-    def get_stonks(self):
+    def _get_stonks(self):
         return self.df['Symbol'].tolist()
+    
+    def get_stonks_dict(self):
+        return [{'value': i, 'label':i} for i in self._get_stonks()]
     
     def get_dates(self):
         return ["%s -> %s"%(self.dfs[i], self.dfs[i-1]) for i in range(len(self.dfs)-1,0,-1)]

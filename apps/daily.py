@@ -30,20 +30,20 @@ layout = html.Div([
     html.Div([
         html.Div([
             html.Div([
-                #html.P("Select Stocks (Upto 10)"),
-                dcc.Dropdown(
-                    id='daily-filter-stocks',
-                    options=[{'value': i, 'label':i} for i in daily_helper.get_stonks()],
-                    multi=True,
-                    placeholder="Select Stocks (upto 10)"
-                )
-            ], className="six columns"),
-            html.Div([
                 #html.P("Select Date"),
                 dcc.Dropdown(
                     id='daily-filter-date',
                     options=[{'value': i, 'label':i} for i in daily_helper.get_dates()],
                     placeholder="Select Comparison Date"
+                )
+            ], className="six columns"),
+            html.Div([
+                #html.P("Select Stocks (Upto 10)"),
+                dcc.Dropdown(
+                    id='daily-filter-stocks',
+                    options=daily_helper.get_stonks_dict(),
+                    multi=True,
+                    placeholder="Select Stocks (upto 10)"
                 )
             ], className="six columns"),
         ], className="row"),
@@ -75,7 +75,16 @@ def update_charts(n_clicks, dropdown, daterange):
 
     return daily_plot_helper.get_delta_bar()
 
-
+@app.callback(
+    Output("daily-filter-stocks", "options"),
+    Input("daily-filter-date", "value")
+)
+def update_stocks(daterange):
+    if daterange is None:
+        raise PreventUpdate("Date range not selected")
+    daily_helper.get_df(*daterange.split(" -> "))
+    
+    return daily_helper.get_stonks_dict()
 
 if __name__ == '__main__':
     app.layout = layout
