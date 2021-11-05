@@ -30,12 +30,27 @@ layout = html.Div([
     html.Div([
         html.Div([
             html.Div([
-                html.P("Select Stocks (Upto 10)"),
+                #html.P("Select Stocks (Upto 10)"),
                 dcc.Dropdown(
+                    id='daily-filter-stocks',
                     options=[{'value': i, 'label':i} for i in daily_helper.get_stonks()],
-                    multi=True
+                    multi=True,
+                    placeholder="Select Stocks (upto 10)"
                 )
-            ], className="six columns")
+            ], className="six columns"),
+            html.Div([
+                #html.P("Select Date"),
+                dcc.Dropdown(
+                    id='daily-filter-date',
+                    options=[{'value': i, 'label':i} for i in daily_helper.get_dates()],
+                    placeholder="Select Comparison Date"
+                )
+            ], className="six columns"),
+        ], className="row"),
+        html.Div([
+            html.Div([
+                html.Button("Show me Da Powaa!", id='daily-filter-submit', n_clicks=0),
+            ], className="twelve columns")
         ], className="row")
     ], className="navbar top-border"),
 ])
