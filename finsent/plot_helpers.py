@@ -86,6 +86,21 @@ class DailyPlots(BasePlots):
                     max=20,
                     value=scale(value)
                 )
+    
+    def get_delta_status_indicator(self, value, id):
+        def get_color(value):
+            colors = {
+                "Increased": "#00FF00",
+                "Stable": "#FFFF00",
+                "Decreased":"#FF0000"
+            }
+            return colors[value]
+
+        return daq.Indicator(
+                id=id,
+                value=True,
+                color=get_color(value)
+            )
 
     def get_stock_rows(self, prefix="daily-stock-data-table-row"):
         rows = []
@@ -115,8 +130,8 @@ class DailyPlots(BasePlots):
                         'children': data.Delta
                     },
                     {
-                        'id': prefix+"-delta_status-%.2d"%index,
-                        'children': data['Delta Status']
+                        'id': prefix+"-delta_status-%.2d_container"%index,
+                        'children': self.get_delta_status_indicator(data['Delta Status'], prefix+"-delta_status-%.2d"%index)
                     }
                 )
 
