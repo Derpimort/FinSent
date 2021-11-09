@@ -85,14 +85,16 @@ def generate_daily_stock_row(id, style, col1, col2, col3, col4, col5, col6):
         children=[
             html.Div(
                 id=col1['id'],
-                style={},
-                className='one column',
+                style={
+                    'text-align': 'center'
+                },
+                className='one columns',
                 children=col1['children']
             ),
             html.Div(
                 id=col2['id'],
                 style={'textAlign': 'center'},
-                className='one column',
+                className='two columns',
                 children=col2['children']
             ),
             html.Div(
@@ -100,13 +102,13 @@ def generate_daily_stock_row(id, style, col1, col2, col3, col4, col5, col6):
                 style={
                     'height': '100%',
                 },
-                className='four columns',
+                className='three columns',
                 children=col3['children']
             ),
             html.Div(
                 id=col4['id'],
                 style={},
-                className='one column',
+                className='one columns',
                 children=col4['children']
             ),
             html.Div(
@@ -124,7 +126,7 @@ def generate_daily_stock_row(id, style, col1, col2, col3, col4, col5, col6):
                     'display': 'flex',
                     'justifyContent': 'center'
                 },
-                className='one column',
+                className='one columns',
                 children=col6['children']
             )
         ]
@@ -135,7 +137,6 @@ def generate_daily_stock_header():
     return generate_daily_stock_row(
         'metric_header',
         {
-            'height': '30px',
             'margin': '10px 0px',
             'textAlign': 'center'
         },
