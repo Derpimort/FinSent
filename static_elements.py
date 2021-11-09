@@ -77,6 +77,7 @@ def generate_daily_stock_row(id, style, col1, col2, col3, col4, col5, col6):
         style = {
             'height': '100px',
             'width': '100%',
+            'align-items': 'center'
         }
     return html.Div(
         id=id,
@@ -106,7 +107,6 @@ def generate_daily_stock_row(id, style, col1, col2, col3, col4, col5, col6):
             html.Div(
                 id=col3['id'],
                 style={
-                    'height': '100%',
                     'text-align': 'center',
                     'display': 'flex',
                     'justifyContent': 'center',
@@ -127,7 +127,6 @@ def generate_daily_stock_row(id, style, col1, col2, col3, col4, col5, col6):
             html.Div(
                 id=col5['id'],
                 style={
-                    'height': '100%',
                     'text-align': 'center',
                     'display': 'flex',
                     'justifyContent': 'center'
