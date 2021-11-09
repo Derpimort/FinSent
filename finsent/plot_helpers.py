@@ -2,6 +2,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 from finsent.constants import ALL_COLUMNS
+from static_elements import generate_daily_stock_row
 
 DEFAULT_STONKS = ["ADANIPOWER", "INFY", "RELIANCE", "TCS"]
 
@@ -73,4 +74,40 @@ class DailyPlots(BasePlots):
         fig.update_yaxes(categoryorder="total ascending", showticklabels=False, title="")
 
         return self._transparent_fig(fig, showlegend=False)
-    
+
+    def get_stock_rows(self, prefix="daily-stock-data-table-row"):
+        rows = []
+        for index, data in self.df.iterrows():
+            rows.append(
+                generate_daily_stock_row(
+                    prefix+"-%.2d"%index,
+                    None,
+                    {
+                        'id': prefix+"-symbol-%.2d"%index,
+                        'children': data.Symbol
+                    },
+                    {
+                        'id': prefix+"-industry-%.2d"%index,
+                        'children': data.Industry
+                    },
+                    {
+                        'id': prefix+"-sentiment-%.2d"%index,
+                        'children': data.Sentiment
+                    },
+                    {
+                        'id': prefix+"-articles-%.2d"%index,
+                        'children': data.Articles
+                    },
+                    {
+                        'id': prefix+"-delta-%.2d"%index,
+                        'children': data.Delta
+                    },
+                    {
+                        'id': prefix+"-delta_status-%.2d"%index,
+                        'children': data['Delta Status']
+                    }
+                )
+
+            )
+        return rows
+        

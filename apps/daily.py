@@ -60,15 +60,19 @@ layout = html.Div([
                 dcc.Graph(id="delta-bar-chart", figure=daily_plot_helper.empty_plot())           
             ])
         ])
-    ], className="top-border left-border right-border"),
+    ], className="top-border left-border right-border graph-section"),
     html.Div([
             html.H2("Stock data"),
             generate_daily_stock_header(),
-    ], className="top-border left-border right-border", id="stock-data-container", )
+            html.Div([
+                dcc.Graph(figure=daily_plot_helper.empty_plot()) 
+            ], id="daily-stock-data-table")
+    ], className="top-border left-border right-border graph-section", id="daily-stock-data-container", )
 ])
 
 @app.callback(
-    Output('delta-bar-chart', 'figure'),
+    [Output('delta-bar-chart', 'figure'),
+    Output('daily-stock-data-table', 'children')],
     [Input('daily-filter-submit', 'n_clicks')],
     [State('daily-filter-stocks', 'value'),
     State('daily-filter-date', 'value')])
@@ -78,7 +82,7 @@ def update_charts(n_clicks, dropdown, daterange):
     df = daily_helper.get_df(*daterange.split(" -> "))
     daily_plot_helper.update_instance(df, dropdown)
 
-    return daily_plot_helper.get_delta_bar()
+    return daily_plot_helper.get_delta_bar(), daily_plot_helper.get_stock_rows()
 
 @app.callback(
     Output("daily-filter-stocks", "options"),
