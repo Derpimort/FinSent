@@ -55,6 +55,7 @@ layout = html.Div([
         ], className="row")
     ], className="navbar top-border"),
     html.Div([
+        html.H2("Delta Chart"),
         dcc.Loading([
             html.Div([
                 dcc.Graph(id="delta-bar-chart", figure=daily_plot_helper.empty_plot())           
@@ -64,9 +65,11 @@ layout = html.Div([
     html.Div([
             html.H2("Stock data"),
             generate_daily_stock_header(),
-            html.Div([
-                dcc.Graph(figure=daily_plot_helper.empty_plot()) 
-            ], id="daily-stock-data-table")
+            dcc.Loading([
+                html.Div([
+                    dcc.Graph(figure=daily_plot_helper.empty_plot()) 
+                ], id="daily-stock-data-table")
+            ]),
     ], className="top-border left-border right-border graph-section", id="daily-stock-data-container", )
 ])
 
