@@ -46,6 +46,10 @@
     padding-top: 4px;
     margin-left: 0%;
 }
+.right-border{
+    border-right: 1px solid #1e1e1e;
+    padding-right: 4px;
+}
 
 .navbar{
     background-color:#26272b;

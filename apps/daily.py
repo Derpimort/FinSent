@@ -59,7 +59,10 @@ layout = html.Div([
                 dcc.Graph(id="delta-bar-chart", figure=daily_plot_helper.empty_plot())           
             ])
         ])
-    ])
+    ], className="top-border left-border right-border"),
+    html.Div([
+
+    ], className="top-border left-border right-border", id="stock-data-container", )
 ])
 
 @app.callback(
