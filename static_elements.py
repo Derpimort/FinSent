@@ -1,6 +1,7 @@
 import dash_core_components as dcc
 import dash_html_components as html
 from app import app
+from finsent.constants import DAILY_COLUMNS
 
 HEADERS = {
     "home":("FinSent", "A plotly-dash based stock financial sentiment analysis dashboard"),
@@ -68,3 +69,77 @@ def header(page="home"):
                 ], className="row left")
             ], className="ten columns")
         ], className="row")
+
+
+# From https://github.com/dkrizman/dash-manufacture-spc-dashboard
+def generate_daily_stock_row(id, style, col1, col2, col3, col4, col5, col6):
+    if style is None:
+        style = {
+            'height': '100px',
+            'width': '100%',
+        }
+    return html.Div(
+        id=id,
+        className='row metric-row',
+        style=style,
+        children=[
+            html.Div(
+                id=col1['id'],
+                style={},
+                className='one column',
+                children=col1['children']
+            ),
+            html.Div(
+                id=col2['id'],
+                style={'textAlign': 'center'},
+                className='one column',
+                children=col2['children']
+            ),
+            html.Div(
+                id=col3['id'],
+                style={
+                    'height': '100%',
+                },
+                className='four columns',
+                children=col3['children']
+            ),
+            html.Div(
+                id=col4['id'],
+                style={},
+                className='one column',
+                children=col4['children']
+            ),
+            html.Div(
+                id=col5['id'],
+                style={
+                    'height': '100%',
+
+                },
+                className='three columns',
+                children=col5['children']
+            ),
+            html.Div(
+                id=col6['id'],
+                style={
+                    'display': 'flex',
+                    'justifyContent': 'center'
+                },
+                className='one column',
+                children=col6['children']
+            )
+        ]
+    )
+
+def generate_daily_stock_header():
+    cols = DAILY_COLUMNS
+    return generate_daily_stock_row(
+        'metric_header',
+        {
+            'height': '30px',
+            'margin': '10px 0px',
+            'textAlign': 'center'
+        },
+        *[{
+            'id': "m_header_%s"%i,
+            'children': html.Div(cols[i])
+        } for i in range(len(cols))])
