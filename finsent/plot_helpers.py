@@ -3,6 +3,7 @@ import plotly.graph_objects as go
 
 from finsent.constants import ALL_COLUMNS
 from static_elements import generate_daily_stock_row
+import dash_daq as daq
 
 DEFAULT_STONKS = ["ADANIPOWER", "INFY", "RELIANCE", "TCS"]
 
@@ -74,6 +75,17 @@ class DailyPlots(BasePlots):
         fig.update_yaxes(categoryorder="total ascending", showticklabels=False, title="")
 
         return self._transparent_fig(fig, showlegend=False)
+    
+    def get_sentiment_bar(self, value, id):
+        def scale(value):
+            return (value+1)*10
+        return daq.GraduatedBar(
+                    id=id,
+                    color={"gradient": True, "ranges": {"red": [0, 7], "yellow": [7, 13], "green": [13, 20]}},
+                    showCurrentValue=True,
+                    max=20,
+                    value=scale(value)
+                )
 
     def get_stock_rows(self, prefix="daily-stock-data-table-row"):
         rows = []
@@ -91,8 +103,8 @@ class DailyPlots(BasePlots):
                         'children': data.Industry
                     },
                     {
-                        'id': prefix+"-sentiment-%.2d"%index,
-                        'children': data.Sentiment
+                        'id': prefix+"-sentiment-%.2d_container"%index,
+                        'children': self.get_sentiment_bar(data.Sentiment, prefix+"-sentiment-%.2d"%index)
                     },
                     {
                         'id': prefix+"-articles-%.2d"%index,
