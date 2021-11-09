@@ -68,7 +68,6 @@
 }
 
 .graph-section{
-    margin: 4px;
     background-color: #1e1e1e;
     border: 1px solid #ae966d;
     border-radius: 10px;
@@ -83,6 +82,39 @@
     padding: 4px;
     box-shadow: 0px 2px 2px -2px;
 }
+
+.m-4{
+    margin: 4px;
+}
+.ml-4{
+    margin-left: 4px;
+}
+.mr-4{
+    margin-right: 4px;
+}
+.mt-4{
+    margin-top: 4px;
+}
+.mb-4{
+    margin-bottom: 4px;
+}
+
+.m-16{
+    margin: 16px;
+}
+.ml-16{
+    margin-left: 16px;
+}
+.mr-16{
+    margin-right: 16px;
+}
+.mt-16{
+    margin-top: 16px;
+}
+.mb-16{
+    margin-bottom: 16px;
+}
+
 
 .metric-row {
     display: flex;

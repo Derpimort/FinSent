@@ -55,13 +55,23 @@ layout = html.Div([
         ], className="row")
     ], className="navbar top-border"),
     html.Div([
-        html.H2("Delta Chart"),
-        dcc.Loading([
-            html.Div([
-                dcc.Graph(id="delta-bar-chart", figure=daily_plot_helper.empty_plot())           
+        html.Div([
+            html.H2("Delta Chart"),
+            dcc.Loading([
+                html.Div([
+                    dcc.Graph(id="delta-bar-chart", figure=daily_plot_helper.empty_plot())           
+                ])
             ])
-        ])
-    ], className="top-border left-border right-border graph-section"),
+        ], className="six columns graph-section"),
+        html.Div([
+            html.H2("Scatter 3D"),
+            dcc.Loading([
+                html.Div([
+                    dcc.Graph(id="scatter-3d-chart", figure=daily_plot_helper.empty_plot())           
+                ])
+            ])
+        ], className="six columns graph-section"),
+    ], className="row m-4 mt-16"),
     html.Div([
             html.H2("Stock data"),
             generate_daily_stock_header(),
@@ -70,12 +80,13 @@ layout = html.Div([
                     dcc.Graph(figure=daily_plot_helper.empty_plot()) 
                 ], id="daily-stock-data-table")
             ]),
-    ], className="top-border left-border right-border graph-section", id="daily-stock-data-container", )
+    ], className="top-border left-border right-border graph-section m-4 mt-16 mb-16", id="daily-stock-data-container", )
 ])
 
 @app.callback(
     [Output('delta-bar-chart', 'figure'),
-    Output('daily-stock-data-table', 'children')],
+    Output('daily-stock-data-table', 'children'),
+    Output('scatter-3d-chart', 'figure')],
     [Input('daily-filter-submit', 'n_clicks')],
     [State('daily-filter-stocks', 'value'),
     State('daily-filter-date', 'value')])
@@ -85,7 +96,11 @@ def update_charts(n_clicks, dropdown, daterange):
     df = daily_helper.get_df(*daterange.split(" -> "))
     daily_plot_helper.update_instance(df, dropdown)
 
-    return daily_plot_helper.get_delta_bar(), daily_plot_helper.get_stock_rows()
+    return (
+        daily_plot_helper.get_delta_bar(), 
+        daily_plot_helper.get_stock_rows(), 
+        daily_plot_helper.get_scatter_3d()
+    )
 
 @app.callback(
     Output("daily-filter-stocks", "options"),

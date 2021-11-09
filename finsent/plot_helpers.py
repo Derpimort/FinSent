@@ -76,6 +76,21 @@ class DailyPlots(BasePlots):
 
         return self._transparent_fig(fig, showlegend=False)
     
+    def get_scatter_3d(self):
+        fig = px.scatter_3d(self.df, 
+                            x="Positive", 
+                            y="Negative", 
+                            z="Neutral",
+                            size="Articles", 
+                            color="Sentiment", 
+                            hover_name="Symbol", 
+                            size_max=60, 
+                            template=self.template
+                        )
+        
+        return self._transparent_fig(fig, colorscale=True)
+
+    
     def get_sentiment_bar(self, value, id):
         def scale(value):
             return (value+1)*10
