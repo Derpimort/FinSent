@@ -11,6 +11,7 @@
 
 .Select-control {
     background-color: #2f2f2f !important;
+    border-color: #8b7857;
 }
 .Select-value-label {
     color: #ae966d;

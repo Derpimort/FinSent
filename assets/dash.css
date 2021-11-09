@@ -70,6 +70,8 @@
 .graph-section{
     margin: 4px;
     background-color: #1e1e1e;
+    border: 1px solid #ae966d;
+    border-radius: 10px;
 }
 
 .graph-section h2{
