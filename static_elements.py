@@ -86,7 +86,8 @@ def generate_daily_stock_row(id, style, col1, col2, col3, col4, col5, col6):
             html.Div(
                 id=col1['id'],
                 style={
-                    'text-align': 'center'
+                    'text-align': 'center',
+                    'font-weight': 'bold'
                 },
                 className='one columns',
                 children=col1['children']
@@ -135,8 +136,9 @@ def generate_daily_stock_row(id, style, col1, col2, col3, col4, col5, col6):
 def generate_daily_stock_header():
     cols = DAILY_COLUMNS
     return generate_daily_stock_row(
-        'metric_header',
+        'daily-stock-data-table-header',
         {
+
             'margin': '10px 0px',
             'textAlign': 'center'
         },

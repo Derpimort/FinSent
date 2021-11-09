@@ -96,3 +96,7 @@
     overflow-x: hidden;
     overflow-y: scroll;
 }
+
+#daily-stock-data-table-header{
+    font-weight: bold;
+}
