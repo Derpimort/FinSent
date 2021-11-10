@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import logging
-from finsent.constants import ALL_COLUMNS
+from finsent.constants import ALL_COLUMNS, NIFTY_FILE
 
 class BaseData:
     pass
@@ -44,7 +44,7 @@ class DailyData(BaseData):
             prev_df = pd.read_csv(os.path.join(self.stonks_dir, "%s.csv" % prev_df))
 
             # Get stock industries
-            stocks = pd.read_csv(self.data_dir+"ind_nifty500list.csv")
+            stocks = pd.read_csv(self.data_dir+NIFTY_FILE)
             df = stocks[['Symbol','Industry']].merge(df, on="Symbol")
 
             # Compare last 2 scores to get delta
