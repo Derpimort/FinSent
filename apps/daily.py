@@ -4,18 +4,10 @@
  @author: Derpimort
 """
 
-
-import os
-import dash
 from dash.exceptions import PreventUpdate
 from dash.dependencies import Input, Output, State
-import dash_table
 import dash_core_components as dcc
 import dash_html_components as html
-import plotly.express as px
-import plotly.graph_objects as go
-import pandas as pd
-import numpy as np
 from finsent.constants import DATA_DIR, STOCKS_DIR, DAILY_COLUMNS
 
 from app import app
