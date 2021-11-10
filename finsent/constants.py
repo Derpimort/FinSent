@@ -10,3 +10,5 @@ KEYWORDS_FILE = "keywords.csv"
 ALL_COLUMNS = ["Symbol", "Industry", "Sentiment", "Articles", "Negative", "Neutral", "Positive", "Delta", "Delta Status"]
 DAILY_COLUMNS = ["Symbol", "Industry", "Sentiment", "Articles", "Delta", "Delta Status"]
 DAILY_COLUMNS_HEADER = ["Symbol", "Industry", "Sentiment", "Articles", "Delta", "Status"]
+
+STONK_COLUMNS = ["Symbol", "Company Name"]
