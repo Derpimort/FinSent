@@ -149,7 +149,7 @@ if __name__ == "__main__":
     date = sys.argv[1] if len(sys.argv) > 1 else None
 
     # Comment the following two lines to process all stocks instead of just select 3
-    selected_stocks = ["ADANIPOWER", "TCS", "RELIANCE", "IDEA", "LTI", "INFY"]
-    df = df[df['Symbol'].isin(selected_stocks)]
+    #selected_stocks = ["ADANIPOWER", "TCS", "RELIANCE", "IDEA", "LTI", "INFY"]
+    #df = df[df['Symbol'].isin(selected_stocks)]
     
     main(df, os.path.join(DATA_DIR, "Stonks/"), date=date)
