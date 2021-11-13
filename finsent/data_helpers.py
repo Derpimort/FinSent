@@ -24,7 +24,6 @@ class BaseData:
     def _init_data(self, *args, **kwargs):
         raise NotImplementedError("Please Implement this method")
 
-
     def _get_stonks(self):
         if self.df is not None:
             return self.df['Symbol'].tolist()  
@@ -97,7 +96,7 @@ class StonkData(BaseData):
             logging.error("No csv files found, Please run main.py atleast once before running dashboards")
             # exit(0)
             
-    def update_instance(self, symbol=None, name=None, reupdate=True):
+    def get_df(self, symbol=None, name=None, reupdate=True):
         if reupdate or not self.updated:
             stock_row = None
             if symbol is not None and symbol != "":
@@ -111,7 +110,8 @@ class StonkData(BaseData):
             self.name = stock_row['Company Name']
 
             self.updated = True
-            return self.get_stonk(cached=False)
+            
+            return self.get_stonk(cached=False), self.stonk_df
 
     def get_stonk(self, cached=True):
         if not self.updated:
