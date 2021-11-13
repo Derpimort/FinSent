@@ -42,7 +42,7 @@ layout = html.Div([
         ], className="row"),
         html.Div([
             html.Div([
-                html.Button("Show me Da Powaa!", id='daily-filter-submit', n_clicks=0),
+                html.Button("Show me Da Powaa!", id='daily-filter-submit', n_clicks=0, className="submit-button mt-16"),
             ], className="twelve columns")
         ], className="row")
     ], className="navbar top-border"),
