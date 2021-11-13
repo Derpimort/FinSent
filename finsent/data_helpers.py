@@ -10,12 +10,6 @@ class BaseData:
         self.data_dir = data_dir
         self.stonks_dir = stonks_dir
         self.stocks = pd.read_csv(self.data_dir+NIFTY_FILE)
-
-
-class DailyData(BaseData):
-    def __init__(self, data_dir, stonks_dir):
-        super().__init__(data_dir, stonks_dir)
-
         # Get all data files
         dfs = []
         for file in os.listdir(self.stonks_dir):
@@ -24,9 +18,26 @@ class DailyData(BaseData):
         dfs.sort()
         self.dfs = dfs
         self.df = None
-        self._init_data()
         self.dfs_pd = pd.Series(pd.to_datetime(dfs).astype(np.int64))
+        self._init_data()
+    
+    def _init_data(self, *args, **kwargs):
+        raise NotImplementedError("Please Implement this method")
 
+
+    def _get_stonks(self):
+        if self.df is not None:
+            return self.df['Symbol'].tolist()  
+        else:
+            return self.stocks['Symbol'].tolist()
+    
+    def get_stonks_dict(self):
+        return [{'value': i, 'label':i} for i in self._get_stonks()]
+
+class DailyData(BaseData):
+    def __init__(self, data_dir, stonks_dir):
+        super().__init__(data_dir, stonks_dir)
+        
     def _init_data(self):
         if len(self.dfs) == 0:
             logging.error("No csv files found, Please run main.py atleast once before running dashboards")
@@ -69,12 +80,6 @@ class DailyData(BaseData):
     
     def get_timestamps(self):
         return list(self.dfs_pd[1::(len(self.dfs_pd)//20)+1])
-
-    def _get_stonks(self):
-        return self.df['Symbol'].tolist()
-    
-    def get_stonks_dict(self):
-        return [{'value': i, 'label':i} for i in self._get_stonks()]
     
     def get_dates(self):
         return ["%s -> %s"%(self.dfs[i], self.dfs[i-1]) for i in range(len(self.dfs)-1,0,-1)]
@@ -85,6 +90,13 @@ class StonkData(BaseData):
         self.updated = False
         self.stonk = None
 
+    def _init_data(self):
+        if len(self.dfs) != 0:
+            self.df = pd.read_csv(os.path.join(self.stonks_dir, "%s.csv" % self.dfs[-1]))
+        else:
+            logging.error("No csv files found, Please run main.py atleast once before running dashboards")
+            # exit(0)
+            
     def update_instance(self, symbol=None, name=None, reupdate=True):
         if reupdate or not self.updated:
             stock_row = None
@@ -104,11 +116,11 @@ class StonkData(BaseData):
     def get_stonk(self, cached=True):
         if not self.updated:
             return None
-        if cached and self.df is not None:
+        if cached and self.stonk_df is not None:
             return self.stonk
 
         data_df = pd.read_csv(os.path.join(self.stonks_dir, "%s/full.csv" % self.symbol))
-        self.df = data_df.sort_values('Date')
+        self.stonk_df = data_df.sort_values('Date')
 
         # Read latest available data
         latest = data_df.iloc[-1]
@@ -121,8 +133,6 @@ class StonkData(BaseData):
         # sentiments = self.stonk.getSentiment()
         return self.stonk
         
-    def get_stocks_list(self):
-        return self.stocks[STONK_COLUMNS]
 
 if __name__=="__main__":
     data_helper = DailyData("data/", "data/Stonks")
