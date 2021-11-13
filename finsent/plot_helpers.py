@@ -1,5 +1,7 @@
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from finsent.constants import ALL_COLUMNS
 from static_elements import generate_daily_stock_row
@@ -13,7 +15,8 @@ class BasePlots:
         self.colorscale = colorscale
 
     def _transparent_fig(self, fig, colorscale=False, **kwargs):
-        fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0},
+        fig.update_layout(template=self.template,
+                            margin={"r":0,"t":0,"l":0,"b":0},
                             plot_bgcolor="rgba(0, 0, 0, 0)",
                             paper_bgcolor="rgba(0, 0, 0, 0)",
                             geo_bgcolor="rgba(0, 0, 0, 0)",
@@ -153,3 +156,90 @@ class DailyPlots(BasePlots):
             )
         return rows
         
+class StonkPlots(BasePlots):
+    def __init__(self, stonk, df):
+        super().__init__()
+        self.update_instance(stonk, df)
+
+    def update_instance(self, stonk, df):
+        self.df = df
+        self.stonk = stonk
+
+        self.df['Date'] = pd.to_datetime(self.df['Date'])
+        self.df = self.df.join(self.stonk.getStockData()['Close'], on='Date')
+
+    def get_stock_chart(self):
+        x = self.df['Date'].dt.date
+
+        fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+        fig.add_trace(go.Scatter(
+            x=x, y=self.df['positive'],
+            mode='lines',
+            line=dict(width=2, color='#00cc96'),
+            stackgroup='one',
+            name="positive",
+            groupnorm='percent'  # sets the normalization for the sum of the stackgroup
+        ), secondary_y=False)
+        fig.add_trace(go.Scatter(
+            x=x, y=self.df['neutral'],
+            mode='lines',
+            line=dict(width=2, color='#efaf3b'),
+            stackgroup='one',
+            name='neutral'
+        ), secondary_y=False)
+        fig.add_trace(go.Scatter(
+            x=x, y=self.df['negative'],
+            mode='lines',
+            line=dict(width=2, color='#EF553B'),
+            stackgroup='one',
+            name='negative'
+        ), secondary_y=False)
+
+        fig.add_trace(go.Scatter(x=x, y=self.df['Close'],
+                                    mode='lines+markers',
+                                    name='Close',
+                                    connectgaps=True), secondary_y=True)
+
+        fig.update_layout(
+            showlegend=True,
+            xaxis_type='category',
+            yaxis=dict(
+                type='linear',
+                range=[1, 100],
+                ticksuffix='%'))
+
+        fig.update_xaxes(
+            rangeslider_visible=True,
+            rangeselector=dict(
+                buttons=list([
+                    dict(count=1, label="1m", step="month", stepmode="backward"),
+                    dict(count=6, label="6m", step="month", stepmode="backward"),
+                    dict(count=1, label="YTD", step="year", stepmode="todate"),
+                    dict(count=1, label="1y", step="year", stepmode="backward"),
+                    dict(step="all")
+                ])
+            )
+        )
+        return self._transparent_fig(fig)
+
+    def get_sentiment_guage(self):
+        avg_sentiment = self.stonk.avg_score
+        reference_score = self.df.iloc[-2]['Score']
+        fig = go.Figure(go.Indicator(
+            domain={'x': [0, 1], 'y': [0, 1]},
+            value=avg_sentiment,
+            mode="gauge+number+delta",
+            title={'text': "Average Sentiment Score w/ Delta"},
+            delta={'reference': reference_score},
+            gauge={'axis': {'range': [-1, 1]},
+                'bar': {'color': "#f44336" if (avg_sentiment-reference_score)<=0 else "#4878d0"},
+                'steps': [
+                {'range': [-1, -0.3], 'color': "#ff9f9b"},
+                {'range': [-0.3, 0.3], 'color': "#fffea3"},
+                {'range': [0.3, 1], 'color': "#8de5a1"}],
+                # 'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 490}
+            }),
+        )
+
+        return self._transparent_fig(fig)
