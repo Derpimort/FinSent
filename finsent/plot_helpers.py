@@ -117,6 +117,14 @@ class BasePlots:
                     children=args[i]['children']
             ) for i in range(1, len(args))]
         )
+    
+    def get_url(self, url):
+        url_title = url if len(url)<64 else url[:64]+"..."
+        
+        return html.A(
+            url_title,
+            href=url,
+            target="_blank")
 
 class DailyPlots(BasePlots):
     def __init__(self, df, stonks=DEFAULT_STONKS):
@@ -328,7 +336,7 @@ class StonkPlots(BasePlots):
         )
 
         return self._transparent_fig(fig)
-    
+
     def get_stock_rows(self, articles_df, prefix="stonk-data-table-row"):
         rows = []
         most_influential = articles_df['sentiment_score'].abs().sort_values(ascending=False)
@@ -346,7 +354,7 @@ class StonkPlots(BasePlots):
                     },
                     {
                         'id': prefix+"-url-%.2d"%index,
-                        'children': data.url
+                        'children': self.get_url(data.url)
                     },
                     # {
                     #     'id': prefix+"-publishedAt-%.2d"%index,
