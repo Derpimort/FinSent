@@ -123,6 +123,14 @@ class DailyPlots(BasePlots):
     def __init__(self, df, stonks=DEFAULT_STONKS):
         super().__init__()
         self.update_instance(df, stonks)
+        self.table_col_classes = {
+            0:['one columns'],
+            1:['two columns'],
+            2:['three columns'],
+            3:['one columns'],
+            4:['three columns'],
+            5:['one columns'],
+        }
 
     def update_instance(self, df, stonks):
         req_cols = ALL_COLUMNS
@@ -130,6 +138,20 @@ class DailyPlots(BasePlots):
         # Filter 
         self.df = df[req_cols].copy()
         self.df = self.df[self.df['Symbol'].isin(stonks)]
+
+    def generate_stock_header(self):
+        cols = DAILY_COLUMNS_HEADER
+        return self.generate_stock_row(
+            'daily-stock-data-table-header',
+            {
+
+                'margin': '10px 0px',
+                'textAlign': 'center'
+            },
+            *[{
+                'id': "m_header_%s"%i,
+                'children': html.Div(cols[i])
+            } for i in range(len(cols))])
     
     def get_delta_bar(self):
         colors = {
@@ -194,7 +216,7 @@ class DailyPlots(BasePlots):
         rows = []
         for index, data in self.df.iterrows():
             rows.append(
-                generate_daily_stock_row(
+                self.generate_stock_row(
                     prefix+"-%.2d"%index,
                     None,
                     {
@@ -219,7 +241,7 @@ class DailyPlots(BasePlots):
                     },
                     {
                         'id': prefix+"-delta_status-%.2d_container"%index,
-                        'children': self.get_delta_status_indicator(data['Delta Status'], prefix+"-delta_status-%.2d"%index)
+                        'children': self.get_status_indicator(data.Delta, prefix+"-delta_status-%.2d"%index)
                     }
                 )
 

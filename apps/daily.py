@@ -13,7 +13,6 @@ from finsent.constants import DATA_DIR, STOCKS_DIR, DAILY_COLUMNS
 from app import app
 from finsent.data_helpers import DailyData
 from finsent.plot_helpers import DailyPlots
-from static_elements import generate_daily_stock_header
 
 
 daily_helper = DailyData(data_dir=DATA_DIR, stonks_dir=STOCKS_DIR)
@@ -66,7 +65,7 @@ layout = html.Div([
     ], className="row m-4 mt-16"),
     html.Div([
             html.H2("Stock data"),
-            generate_daily_stock_header(),
+            daily_plot_helper.generate_stock_header(),
             dcc.Loading([
                 html.Div([
                     dcc.Graph(figure=daily_plot_helper.empty_plot()) 
