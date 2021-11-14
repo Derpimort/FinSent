@@ -26,7 +26,7 @@ from finsent.constants import DATA_DIR, STOCKS_DIR
 
 from app import app
 
-stonk_helper = StonkData(data_dir=DATA_DIR, stonks_dir=STOCKS_DIR)
+stonk_helper = StonkData(data_dir=DATA_DIR, stonks_dir=STOCKS_DIR, use_sqlite=True)
 stonk_plot_helper = StonkPlots(*stonk_helper.get_df())
 
 # Dashboard components layout

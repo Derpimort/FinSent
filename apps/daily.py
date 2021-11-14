@@ -15,7 +15,7 @@ from finsent.data_helpers import DailyData
 from finsent.plot_helpers import DailyPlots
 
 
-daily_helper = DailyData(data_dir=DATA_DIR, stonks_dir=STOCKS_DIR)
+daily_helper = DailyData(data_dir=DATA_DIR, stonks_dir=STOCKS_DIR, use_sqlite=True)
 daily_plot_helper = DailyPlots(daily_helper.df)
 
 layout = html.Div([
