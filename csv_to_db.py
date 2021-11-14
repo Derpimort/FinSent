@@ -3,13 +3,14 @@ import sqlite3
 from sqlite3.dbapi2 import Error
 
 import pandas as pd
-from finsent.constants import DATA_DIR, STOCKS_DIR
+from finsent.constants import DATA_DIR, NIFTY_FILE, STOCKS_DIR
 import logging
 
 ARTICLES_KEYS = ['Symbol', 'date', 'title', 'description', 'url', 'publishedAt', 'prediction', 'sentiment_score']
 STONKS_KEYS = ['Symbol', 'date', 'avg_sentiment_score', 'articles', 'negative', 'neutral', 'positive']
 ARTICLES_TABLENAME = "articles"
 STONKS_TABLENAME = "stonks"
+STONKS_STATIC_TABLENAME = "stonks_static"
 
 class DBHelper:
     def __init__(self, data_dir = DATA_DIR):
@@ -49,6 +50,15 @@ class DBHelper:
                 negative real NOT NULL,
                 neutral real NOT NULL,
                 positive real NOT NULL);
+            
+            CREATE TABLE IF NOT EXISTS stonks_static(
+                Symbol text NOT NULL,
+                Company_Name text,
+                Industry text,
+                Series text,
+                ISIN_Code text,
+                keywords text
+            )
                 """
             cursor.executescript(query)
         except Error as e:
@@ -88,9 +98,12 @@ class DBHelper:
     def check_article(self, article_dict):
         return self._check_entry(article_dict, ARTICLES_TABLENAME)
     
+    def check_stock_static_entry(self, stock_static_dict):
+        return self._check_entry(stock_static_dict, STONKS_STATIC_TABLENAME)
+    
     def check_stock_entry(self, stock_dict):
         return self._check_entry(stock_dict, STONKS_TABLENAME)
-    
+
     def _insert_row(self, insertion_dict, table_name):
         assert isinstance(insertion_dict, dict), "Error: need dict"
 
@@ -157,6 +170,14 @@ class DBHelper:
             table_name = STONKS_TABLENAME
         )
     
+    def insert_stonk_static(self, stonk_static_dict):
+        exists = self.check_stock_static_entry({
+            "Symbol": stonk_static_dict['Symbol']
+        })
+        if not exists:
+            return self._insert_row(stonk_static_dict, STONKS_STATIC_TABLENAME)
+
+    
 if __name__=="__main__":
     db_helper = DBHelper()
     dfs = []
@@ -191,5 +212,12 @@ if __name__=="__main__":
                 continue
             df_pd = pd.read_csv(os.path.join(path, df))
             db_helper.insert_articles(df_pd.iterrows(), symbol=stonk, date=date)
+    df = pd.read_csv(os.path.join(DATA_DIR, NIFTY_FILE))
+    keywords = pd.read_csv(os.path.join(DATA_DIR, "keywords.csv"), index_col=[0])
+    df = df.merge(keywords, on="Symbol")
+
+    for index, data in df.iterrows():
+        db_helper.insert_stonk_static(data.to_dict())
+
     db_helper.connection.commit()
 
