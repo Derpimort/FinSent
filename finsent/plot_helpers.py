@@ -3,8 +3,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from finsent.constants import ALL_COLUMNS
-from static_elements import generate_daily_stock_row
+from finsent.constants import ALL_COLUMNS, DAILY_COLUMNS_HEADER, STONK_COLUMNS_HEADER
 import dash_daq as daq
 import dash_html_components as html
 
@@ -185,33 +184,6 @@ class DailyPlots(BasePlots):
         
         return self._transparent_fig(fig, colorscale=True)
 
-    
-    def get_sentiment_bar(self, value, id):
-        def scale(value):
-            return (value+1)*10
-        return daq.GraduatedBar(
-                    id=id,
-                    color={"gradient": True, "ranges": {"red": [0, 7], "yellow": [7, 13], "green": [13, 20]}},
-                    showCurrentValue=True,
-                    max=20,
-                    value=scale(value)
-                )
-    
-    def get_delta_status_indicator(self, value, id):
-        def get_color(value):
-            colors = {
-                "Increased": "#00FF00",
-                "Stable": "#FFFF00",
-                "Decreased":"#FF0000"
-            }
-            return colors[value]
-
-        return daq.Indicator(
-                id=id,
-                value=True,
-                color=get_color(value)
-            )
-
     def get_stock_rows(self, prefix="daily-stock-data-table-row"):
         rows = []
         for index, data in self.df.iterrows():
@@ -252,6 +224,13 @@ class StonkPlots(BasePlots):
     def __init__(self, stonk, df):
         super().__init__()
         self.update_instance(stonk, df)
+        self.table_col_classes = {
+            0:['three columns'],
+            1:['three columns'],
+            2:['three columns'],
+            3:['two columns'],
+            4:['one columns'],
+        }
 
     def update_instance(self, stonk, df):
         self.df = df
@@ -259,6 +238,20 @@ class StonkPlots(BasePlots):
 
         self.df['Date'] = pd.to_datetime(self.df['Date'])
         self.df = self.df.join(self.stonk.getStockData()['Close'], on='Date')
+
+    def generate_stock_header(self):
+        cols = STONK_COLUMNS_HEADER
+        return self.generate_stock_row(
+            'stonk-data-table-header',
+            {
+
+                'margin': '10px 0px',
+                'textAlign': 'center'
+            },
+            *[{
+                'id': "m_header_%s"%i,
+                'children': html.Div(cols[i])
+            } for i in range(len(cols))])
 
     def get_stock_chart(self):
         x = self.df['Date'].dt.date
@@ -335,3 +328,43 @@ class StonkPlots(BasePlots):
         )
 
         return self._transparent_fig(fig)
+    
+    def get_stock_rows(self, articles_df, prefix="stonk-data-table-row"):
+        rows = []
+        most_influential = articles_df['sentiment_score'].abs().sort_values(ascending=False)
+        most_influential = articles_df.loc[most_influential.index][:10]
+        most_influential = most_influential.reset_index(drop=True)
+        
+        for index, data in most_influential.iterrows():
+            rows.append(
+                self.generate_stock_row(
+                    prefix+"-%.2d"%index,
+                    None,
+                    {
+                        'id': prefix+"-title-%.2d"%index,
+                        'children': data.title
+                    },
+                    {
+                        'id': prefix+"-url-%.2d"%index,
+                        'children': data.url
+                    },
+                    # {
+                    #     'id': prefix+"-publishedAt-%.2d"%index,
+                    #     'children': data.publishedAt
+                    # },
+                    {
+                        'id': prefix+"-sentiment-%.2d_container"%index,
+                        'children': self.get_sentiment_bar(data.sentiment_score, prefix+"-sentiment-%.2d"%index)
+                    },
+                    {
+                        'id': prefix+"-sentiment_score-%.2d"%index,
+                        'children': data.sentiment_score
+                    },
+                    {
+                        'id': prefix+"-status-%.2d_container"%index,
+                        'children': self.get_status_indicator(data.sentiment_score, prefix+"-status-%.2d"%index)
+                    }
+                )
+
+            )
+        return rows

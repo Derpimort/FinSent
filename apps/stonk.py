@@ -71,12 +71,22 @@ layout = html.Div(children=[
             ])
         ], className="four columns graph-section"),
     ], className="row m-4 mt-16"),
+    html.Div([
+            html.H2("Top Influential Articles "),
+            stonk_plot_helper.generate_stock_header(),
+            dcc.Loading([
+                html.Div(
+                    stonk_plot_helper.get_stock_rows(stonk_helper.latest_df)
+                , id="stonk-data-table")
+            ]),
+    ], className="top-border left-border right-border graph-section m-4 mt-16 mb-16", id="stonk-data-container", )
 ])
 
 
 @app.callback(
     [Output('stock-line-chart', 'figure'),
-    Output('sentiment-guage-chart', 'figure')],
+    Output('sentiment-guage-chart', 'figure'),
+    Output('stonk-data-table', 'children')],
     [Input('stonk-filter-submit', 'n_clicks')],
     [State('stonk-filter-stocks', 'value')])
 def update_charts(n_clicks, dropdown):
@@ -89,7 +99,8 @@ def update_charts(n_clicks, dropdown):
 
     return (
         stonk_plot_helper.get_stock_chart(), 
-        stonk_plot_helper.get_sentiment_guage()
+        stonk_plot_helper.get_sentiment_guage(),
+        stonk_plot_helper.get_stock_rows(stonk_helper.latest_df)
     )
 
 if __name__ == '__main__':
