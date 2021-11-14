@@ -6,6 +6,7 @@ from plotly.subplots import make_subplots
 from finsent.constants import ALL_COLUMNS
 from static_elements import generate_daily_stock_row
 import dash_daq as daq
+import dash_html_components as html
 
 DEFAULT_STONKS = ["ADANIPOWER", "INFY", "RELIANCE", "TCS"]
 
@@ -13,6 +14,7 @@ class BasePlots:
     def __init__(self, template='plotly_dark', colorscale='Bluered'):
         self.template = template
         self.colorscale = colorscale
+        self.table_col_classes = {i: ['two columns'] for i in range(6)}
 
     def _transparent_fig(self, fig, colorscale=False, **kwargs):
         fig.update_layout(template=self.template,
@@ -48,6 +50,74 @@ class BasePlots:
         )
         # END
         return self._transparent_fig(fig)
+    
+    def get_sentiment_bar(self, value, id):
+        def scale(value):
+            return (value+1)*10
+        return daq.GraduatedBar(
+                    id=id,
+                    color={"gradient": True, "ranges": {"red": [0, 7], "yellow": [7, 13], "green": [13, 20]}},
+                    showCurrentValue=True,
+                    max=20,
+                    value=scale(value)
+                )
+    
+    def get_status_indicator(self, value, id):
+        def get_color(value):
+            if value < 0:
+                value = -1
+            elif value > 0:
+                value = 1
+            else:
+                value = 0
+            colors = {
+                1: "#00FF00",
+                0: "#FFFF00",
+                -1:"#FF0000"
+            }
+            return colors[value]
+
+        return daq.Indicator(
+                id=id,
+                value=True,
+                color=get_color(value)
+            )
+    # From https://github.com/dkrizman/dash-manufacture-spc-dashboard
+    def generate_stock_row(self, id, style, *args):
+        if style is None:
+            style = {
+                'height': '100px',
+                'width': '100%',
+                'align-items': 'center'
+            }
+        assert len(args)>=1, "Need atleast one column to generate row"
+        return html.Div(
+            id=id,
+            className='row metric-row',
+            style=style,
+            children=[
+                html.Div(
+                    id=args[0]['id'],
+                    style={
+                        'text-align': 'center',
+                        'font-weight': 'bold',
+                        'display': 'flex',
+                        'justifyContent': 'center',
+                    },
+                    className=" ".join(self.table_col_classes[0]),
+                    children=args[0]['children']
+                ),
+            ]+
+            [html.Div(
+                    id=args[i]['id'],
+                    style={
+                        'textAlign': 'center',
+                        'display': 'flex',
+                        'justifyContent': 'center',},
+                    className=" ".join(self.table_col_classes[i]),
+                    children=args[i]['children']
+            ) for i in range(1, len(args))]
+        )
 
 class DailyPlots(BasePlots):
     def __init__(self, df, stonks=DEFAULT_STONKS):

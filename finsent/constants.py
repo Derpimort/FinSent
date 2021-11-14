@@ -12,3 +12,4 @@ DAILY_COLUMNS = ["Symbol", "Industry", "Sentiment", "Articles", "Delta", "Delta 
 DAILY_COLUMNS_HEADER = ["Symbol", "Industry", "Sentiment", "Articles", "Delta", "Status"]
 
 STONK_COLUMNS = ["Symbol", "Company Name"]
+STONK_COLUMNS_HEADER = ["Title", "URL", "Sentiment", "Score", "Status"]
