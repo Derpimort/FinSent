@@ -4,24 +4,15 @@
  @author: Derpimort
 """
 
-
-import os
-import dash
 from dash.exceptions import PreventUpdate
 from dash.dependencies import Input, Output, State
-import dash_table
 import dash_core_components as dcc
 import dash_html_components as html
-import plotly.express as px
-import plotly.graph_objects as go
-import pandas as pd
-import numpy as np
 from finsent.constants import DATA_DIR, STOCKS_DIR, DAILY_COLUMNS
 
 from app import app
 from finsent.data_helpers import DailyData
 from finsent.plot_helpers import DailyPlots
-from static_elements import generate_daily_stock_header
 
 
 daily_helper = DailyData(data_dir=DATA_DIR, stonks_dir=STOCKS_DIR)
@@ -50,7 +41,7 @@ layout = html.Div([
         ], className="row"),
         html.Div([
             html.Div([
-                html.Button("Show me Da Powaa!", id='daily-filter-submit', n_clicks=0),
+                html.Button("Show me Da Powaa!", id='daily-filter-submit', n_clicks=0, className="submit-button mt-16"),
             ], className="twelve columns")
         ], className="row")
     ], className="navbar top-border"),
@@ -74,7 +65,7 @@ layout = html.Div([
     ], className="row m-4 mt-16"),
     html.Div([
             html.H2("Stock data"),
-            generate_daily_stock_header(),
+            daily_plot_helper.generate_stock_header(),
             dcc.Loading([
                 html.Div([
                     dcc.Graph(figure=daily_plot_helper.empty_plot()) 

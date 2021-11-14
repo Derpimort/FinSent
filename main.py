@@ -20,7 +20,7 @@ import yfinance as yf
 
 from pytorch_pretrained_bert.modeling import BertForSequenceClassification
 from pytorch_pretrained_bert.tokenization import BertTokenizer
-from finsent.constants import DATA_DIR, MODEL_DIR
+from finsent.constants import DATA_DIR, KEYWORDS_FILE, MODEL_DIR, NIFTY_FILE
 import logging
 
 logging.root.handlers = []
@@ -139,8 +139,8 @@ def main(stonks, data_dir, MODEL_DIR=MODEL_DIR, date=None, prev_10=False):
 
 if __name__ == "__main__":
     logging.info("Finding stonk DFs")
-    stonks = pd.read_csv(DATA_DIR+"ind_nifty500list.csv")
-    keywords = pd.read_csv(DATA_DIR+"keywords.csv")
+    stonks = pd.read_csv(DATA_DIR+NIFTY_FILE)
+    keywords = pd.read_csv(DATA_DIR+KEYWORDS_FILE)
     df = stonks.merge(keywords, on='Symbol')
 
     # date = input("Enter date(YYYY-MM-DD), leave empty if today: ")

@@ -7,6 +7,7 @@
 
 import os
 import dash
+from dash.exceptions import PreventUpdate
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
@@ -15,6 +16,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
+from finsent.data_helpers import StonkData
+from finsent.plot_helpers import StonkPlots
 
 from finsent.stock import Stock
 
@@ -23,224 +26,82 @@ from finsent.constants import DATA_DIR, STOCKS_DIR
 
 from app import app
 
-# stocks list
-stocks = pd.read_csv(DATA_DIR+"ind_nifty_selected.csv")[['Symbol', 'Company Name']]
+stonk_helper = StonkData(data_dir=DATA_DIR, stonks_dir=STOCKS_DIR)
+stonk_plot_helper = StonkPlots(*stonk_helper.get_df())
 
 # Dashboard components layout
 layout = html.Div(children=[
-    html.H1(children='Financial sentiment analysis'),
-
-    html.P(children='''
-        Analyze news sentiment with FinBERT.
-    '''),
     html.Div([
         html.Div([
-            html.H4(id="stock_symbol", children="RELIANCE"),
-            html.P(id="stock_name", children="Reliance Industries")
-        ], className="four columns"),
-        html.Div([
             html.Div([
-                html.H5("Select stock"),
                 dcc.Dropdown(
-                    id='select_stock',
-                    options=[
-                        {'label': "%s - %s" % (sym, name), 'value': sym} for sym, name in stocks.values],
-                    value='RELIANCE'
+                    id='stonk-filter-stocks',
+                    options=stonk_helper.get_stonks_dict(),
+                    multi=False,
+                    value=stonk_helper.symbol,
+                    placeholder="Select Stock"
                 )
-            ]),
-        ], className="six columns")
-    ], className="row"),
-    dcc.Loading(
-        id="loading-graphs-indi",
-        children=[
+            ], className="six columns"),
             html.Div([
+                html.Button("Show me Da Powaa!", id='stonk-filter-submit', n_clicks=0, className="submit-button"),
+            ], className="six columns")
+        ], className="row"),
+    ], className="navbar top-border"),
+    html.Div([
+        html.Div([
+            html.H2("Stock Chart"),
+            dcc.Loading([
                 html.Div([
-                    dcc.Graph(id='stock_data_graph')
-                ], className="eight columns"),
+                    dcc.Graph(id="stock-line-chart", 
+                    #figure=stonk_plot_helper.empty_plot(),
+                    figure=stonk_plot_helper.get_stock_chart(),
+                    )           
+                ])
+            ])
+        ], className="eight columns graph-section"),
+        html.Div([
+            html.H2("Sentiment Guage"),
+            dcc.Loading([
                 html.Div([
-                    dcc.Graph(id='stock_sentiment_guage')
-                ], className="four columns"),
-            ], className="row")
-        ]
-    ),
-    dcc.Loading(
-        id="loading-table-indi",
-        children=[
-            dash_table.DataTable(
-                id='stock_data_table',
-                style_cell={
-                    # all three widths are needed
-                    'minWidth': '180px', 'width': '180px', 'maxWidth': '180px',
-                    'height': 'auto',
-                    'whiteSpace': 'normal'
-                },
-                columns=[{"name": i, "id": i, "presentation": "markdown"} for i in ['title', 'publishedAt', 'prediction',
-                                                                                    'sentiment_score']],
-                sort_action="native",
-                sort_mode="multi",
-                page_action="native",
-                page_current=0,
-                page_size=10,
-            )
-        ]
-    )
-
+                    dcc.Graph(id="sentiment-guage-chart", 
+                    #figure=stonk_plot_helper.empty_plot(),
+                    figure=stonk_plot_helper.get_sentiment_guage(),
+                    )           
+                ])
+            ])
+        ], className="four columns graph-section"),
+    ], className="row m-4 mt-16"),
+    html.Div([
+            html.H2("Top Influential Articles "),
+            stonk_plot_helper.generate_stock_header(),
+            dcc.Loading([
+                html.Div(
+                    stonk_plot_helper.get_stock_rows(stonk_helper.latest_df)
+                , id="stonk-data-table")
+            ]),
+    ], className="top-border left-border right-border graph-section m-4 mt-16 mb-16", id="stonk-data-container", )
 ])
-
-# Update function on stock selection from dropdown
 
 
 @app.callback(
-    [Output('stock_data_graph', 'figure'),
-     Output('stock_sentiment_guage', 'figure'),
-     Output('stock_data_table', 'data'),
-     Output('stock_symbol', 'children'),
-     Output('stock_name', 'children')],
-    [Input('select_stock', 'value')]
-)
-def update(dropdown):
+    [Output('stock-line-chart', 'figure'),
+    Output('sentiment-guage-chart', 'figure'),
+    Output('stonk-data-table', 'children')],
+    [Input('stonk-filter-submit', 'n_clicks')],
+    [State('stonk-filter-stocks', 'value')])
+def update_charts(n_clicks, dropdown):
+    if n_clicks==0 or dropdown is None:
+        raise PreventUpdate("Invalid selection")
 
-    symbol = 'RELIANCE' if not dropdown else dropdown
-    name = stocks[stocks['Symbol'] == symbol]['Company Name'].iloc[0]
-
-    return get_graphs(symbol, name)
-
-
-def get_graphs(symbol, name):
-    """
-        Parameters
-        -----------
-        symbol: str
-                stock symbol
-        name:   str
-                stock name
-
-        Returns
-        --------
-        stock_fig:  plotly.graph_objects.Figure
-                    line plot with stock sentiment and close value over time
-        avg_sentiment_fig:  plotly.graph_objects.Figure
-                            guage chart with stock sentiment score and delta value
-        latest_df:  dict
-                    dictionary containing latest articles records
-        symbol: str
-                stock symbol
-        name:   str
-                stock name
-    """
-    # get stock symbol from either symbol or name
-    stock = None
-    if symbol is not None and symbol != "":
-        stock = stocks[stocks['Symbol'].str.contains(symbol)].iloc[0]
-    else:
-        stock = stocks[stocks['Company Name'].str.contains(name)].iloc[0]
-    symbol = stock['Symbol']
-    name = stock['Company Name']
-
-    # read dataframes
-    data_df = pd.read_csv(os.path.join(STOCKS_DIR, "%s/full.csv" % symbol))
-    data_df = data_df.sort_values('Date')
-
-    # Read latest available data
-    latest = data_df.iloc[-1]
-    latest_df = pd.read_csv(os.path.join(
-        STOCKS_DIR, "%s/%s.csv" % (symbol, latest['Date'])))
-
-    # Get ticker data and sentiment
-    stock = Stock(symbol, name, sentiment=latest_df, ticker=True)
-    df = stock.getStockData()
-    sentiments = stock.getSentiment()
-
-    # get graphs and tabledata
-    stock_fig = stock_graph(df, symbol, data_df)
-    avg_sentiment_fig = avg_sentiment_graph(
-        stock.avg_score, data_df.iloc[-2]['Score'])
-    latest_df['title'] = '[' + \
-        latest_df['title'].astype(
-            str) + '](' + latest_df['url'].astype(str) + ')'
-
-    return stock_fig, avg_sentiment_fig, latest_df.drop(['description', 'url'], axis=1).to_dict('records'), symbol, name
-
-
-def stock_graph(df, symbol, data_df):
-    data_df['Date'] = pd.to_datetime(data_df['Date'])
-    data_df = data_df.join(df['Close'], on='Date')
-    x = data_df['Date'].dt.date
-    #df = df[df.index.isin(x)]
-    # x =
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
-
-    fig.add_trace(go.Scatter(
-        x=x, y=data_df['positive'],
-        mode='lines',
-        line=dict(width=0.5, color='rgb(111, 231, 219)'),
-        stackgroup='one',
-        name="positive",
-        groupnorm='percent'  # sets the normalization for the sum of the stackgroup
-    ), secondary_y=False)
-    fig.add_trace(go.Scatter(
-        x=x, y=data_df['neutral'],
-        mode='lines',
-        line=dict(width=0.5, color='rgb(233, 241, 206)'),
-        stackgroup='one',
-        name='neutral'
-    ), secondary_y=False)
-    fig.add_trace(go.Scatter(
-        x=x, y=data_df['negative'],
-        mode='lines',
-        line=dict(width=0.5, color='rgb(233, 169, 170)'),
-        stackgroup='one',
-        name='negative'
-    ), secondary_y=False)
-
-    fig.add_trace(go.Scatter(x=x, y=data_df['Close'],
-                             mode='lines+markers',
-                             name='Close',
-                             connectgaps=True), secondary_y=True)
-
-    fig.update_layout(
-        showlegend=True,
-        xaxis_type='category',
-        yaxis=dict(
-            type='linear',
-            range=[1, 100],
-            ticksuffix='%'))
-
-    fig.update_xaxes(
-        rangeslider_visible=True,
-        rangeselector=dict(
-            buttons=list([
-                dict(count=1, label="1m", step="month", stepmode="backward"),
-                dict(count=6, label="6m", step="month", stepmode="backward"),
-                dict(count=1, label="YTD", step="year", stepmode="todate"),
-                dict(count=1, label="1y", step="year", stepmode="backward"),
-                dict(step="all")
-            ])
-        )
+    stonk_plot_helper.update_instance(
+        *stonk_helper.get_df(symbol=dropdown)
     )
 
-    return fig
-
-
-def avg_sentiment_graph(avg_sentiment, reference_score):
-    fig = go.Figure(go.Indicator(
-        domain={'x': [0, 1], 'y': [0, 1]},
-        value=avg_sentiment,
-        mode="gauge+number+delta",
-        title={'text': "Average Sentiment Score w/ Delta"},
-        delta={'reference': reference_score},
-        gauge={'axis': {'range': [-1, 1]},
-               'bar': {'color': "#4878d0"},
-               'steps': [
-            {'range': [-1, -0.3], 'color': "#ff9f9b"},
-            {'range': [-0.3, 0.3], 'color': "#fffea3"},
-            {'range': [0.3, 1], 'color': "#8de5a1"}],
-            # 'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 490}
-        }),
+    return (
+        stonk_plot_helper.get_stock_chart(), 
+        stonk_plot_helper.get_sentiment_guage(),
+        stonk_plot_helper.get_stock_rows(stonk_helper.latest_df)
     )
-
-    return fig
-
 
 if __name__ == '__main__':
     app.layout = layout

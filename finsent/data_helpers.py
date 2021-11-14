@@ -2,15 +2,14 @@ import pandas as pd
 import numpy as np
 import os
 import logging
-from finsent.constants import ALL_COLUMNS
+from finsent.constants import ALL_COLUMNS, NIFTY_FILE, STONK_COLUMNS
+from finsent.stock import Stock
 
 class BaseData:
-    pass
-
-class DailyData(BaseData):
     def __init__(self, data_dir, stonks_dir):
         self.data_dir = data_dir
         self.stonks_dir = stonks_dir
+        self.stocks = pd.read_csv(self.data_dir+NIFTY_FILE)
         # Get all data files
         dfs = []
         for file in os.listdir(self.stonks_dir):
@@ -19,9 +18,25 @@ class DailyData(BaseData):
         dfs.sort()
         self.dfs = dfs
         self.df = None
-        self._init_data()
         self.dfs_pd = pd.Series(pd.to_datetime(dfs).astype(np.int64))
+        self._init_data()
+    
+    def _init_data(self, *args, **kwargs):
+        raise NotImplementedError("Please Implement this method")
 
+    def _get_stonks(self):
+        if self.df is not None:
+            return self.df['Symbol'].tolist()  
+        else:
+            return self.stocks['Symbol'].tolist()
+    
+    def get_stonks_dict(self):
+        return [{'value': i, 'label':i} for i in self._get_stonks()]
+
+class DailyData(BaseData):
+    def __init__(self, data_dir, stonks_dir):
+        super().__init__(data_dir, stonks_dir)
+        
     def _init_data(self):
         if len(self.dfs) == 0:
             logging.error("No csv files found, Please run main.py atleast once before running dashboards")
@@ -44,8 +59,8 @@ class DailyData(BaseData):
             prev_df = pd.read_csv(os.path.join(self.stonks_dir, "%s.csv" % prev_df))
 
             # Get stock industries
-            stocks = pd.read_csv(self.data_dir+"ind_nifty500list.csv")
-            df = stocks[['Symbol','Industry']].merge(df, on="Symbol")
+            
+            df = self.stocks[['Symbol','Industry']].merge(df, on="Symbol")
 
             # Compare last 2 scores to get delta
             df = df.merge(prev_df.set_index('Symbol')[
@@ -64,15 +79,60 @@ class DailyData(BaseData):
     
     def get_timestamps(self):
         return list(self.dfs_pd[1::(len(self.dfs_pd)//20)+1])
-
-    def _get_stonks(self):
-        return self.df['Symbol'].tolist()
-    
-    def get_stonks_dict(self):
-        return [{'value': i, 'label':i} for i in self._get_stonks()]
     
     def get_dates(self):
         return ["%s -> %s"%(self.dfs[i], self.dfs[i-1]) for i in range(len(self.dfs)-1,0,-1)]
+
+class StonkData(BaseData):
+    def __init__(self, data_dir, stonks_dir):
+        super().__init__(data_dir, stonks_dir)
+        self.updated = False
+        self.stonk = None
+
+    def _init_data(self):
+        if len(self.dfs) != 0:
+            self.df = pd.read_csv(os.path.join(self.stonks_dir, "%s.csv" % self.dfs[-1]))
+        else:
+            logging.error("No csv files found, Please run main.py atleast once before running dashboards")
+            # exit(0)
+            
+    def get_df(self, symbol=None, name=None, reupdate=True):
+        if reupdate or not self.updated:
+            stock_row = None
+            if symbol is not None and symbol != "":
+                stock_row = self.stocks[self.stocks['Symbol'].str.contains(symbol)].iloc[0]
+            elif name is not None and name != "":
+                stock_row = self.stocks[self.stocks['Company Name'].str.contains(name)].iloc[0]
+            else:
+                stock_row = self.stocks.iloc[0]
+
+            self.symbol = stock_row['Symbol']
+            self.name = stock_row['Company Name']
+
+            self.updated = True
+            
+            return self.get_stonk(cached=False), self.stonk_df
+
+    def get_stonk(self, cached=True):
+        if not self.updated:
+            return None
+        if cached and self.stonk_df is not None:
+            return self.stonk
+
+        data_df = pd.read_csv(os.path.join(self.stonks_dir, "%s/full.csv" % self.symbol))
+        self.stonk_df = data_df.sort_values('Date')
+
+        # Read latest available data
+        latest = data_df.iloc[-1]
+        self.latest_df = pd.read_csv(os.path.join(
+            self.stonks_dir, "%s/%s.csv" % (self.symbol, latest['Date'])))
+
+        # Get ticker data and sentiment
+        self.stonk = Stock(self.symbol, self.name, sentiment=self.latest_df, ticker=True)
+        # df = self.stonk.getStockData()
+        # sentiments = self.stonk.getSentiment()
+        return self.stonk
+        
 
 if __name__=="__main__":
     data_helper = DailyData("data/", "data/Stonks")
