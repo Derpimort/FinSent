@@ -6,27 +6,18 @@ import pandas as pd
 from finsent.constants import DATA_DIR, NIFTY_FILE, STOCKS_DIR
 import logging
 
+from finsent.db_helper import BaseDB
+
 ARTICLES_KEYS = ['Symbol', 'date', 'title', 'description', 'url', 'publishedAt', 'prediction', 'sentiment_score']
 STONKS_KEYS = ['Symbol', 'date', 'avg_sentiment_score', 'articles', 'negative', 'neutral', 'positive']
 ARTICLES_TABLENAME = "articles"
 STONKS_TABLENAME = "stonks"
 STONKS_STATIC_TABLENAME = "stonks_static"
 
-class DBHelper:
+class DBHelper(BaseDB):
     def __init__(self, data_dir = DATA_DIR):
-        self.data_dir = data_dir
-        self._init_connection()
+        super().__init__(data_dir = data_dir)
         self.create_tables()
-    
-    def __del__(self):
-        self.connection.close()
-    
-    def _init_connection(self, dbname="stonks.db"):
-        try:
-            self.connection = sqlite3.connect(os.path.join(self.data_dir, dbname))
-        except Error as e:
-            logging.error("Exception in DB connect")
-            logging.error(e)
     
     def create_tables(self):
         cursor = self.connection.cursor()
@@ -66,89 +57,16 @@ class DBHelper:
             logging.error(e)
         finally:
             cursor.close()
-
-    def _get_entry(self, params_dict, table_name):
-        cursor = self.connection.cursor()
-        res = None
-        try:
-            query = """SELECT * FROM {table_name}""".format(table_name=table_name)
-            if params_dict:
-                query += " WHERE "
-                query += " AND ".join(["{key}=:{key}".format(key=key) for key in params_dict])
-                cursor.execute(query, params_dict)
-            else:
-                cursor.execute(query,)
-            res = cursor.fetchall()
-        except Error as e:
-            logging.error("Exception in _check_entry")
-            logging.error(e)
-        finally:
-            cursor.close()
-
-        return res
-    
-    def _check_entry(self, params_dict, table_name):
-        entries = self._get_entry(params_dict, table_name)
-
-        if entries and len(entries)>=1:
-            return True
-
-        return False
     
     def check_article(self, article_dict):
         return self._check_entry(article_dict, ARTICLES_TABLENAME)
-    
+
     def check_stock_static_entry(self, stock_static_dict):
         return self._check_entry(stock_static_dict, STONKS_STATIC_TABLENAME)
     
     def check_stock_entry(self, stock_dict):
         return self._check_entry(stock_dict, STONKS_TABLENAME)
 
-    def _insert_row(self, insertion_dict, table_name):
-        assert isinstance(insertion_dict, dict), "Error: need dict"
-
-        cursor = self.connection.cursor()
-        try:
-            query = """INSERT INTO {table_name}({params}) VALUES (""".format(
-                table_name = table_name,
-                params = ", ".join(list(insertion_dict.keys())))
-            
-            query += ", ".join(["?" for key in insertion_dict])
-            query += ")"
-
-            cursor.execute(query, insertion_dict.values())
-
-        except Error as e:
-            logging.error("Exception in _insert_row")
-            logging.error(e)
-            return False
-        finally:
-            cursor.close()
-
-        return True
-
-    def _insert_generator(self, generator, keys, table_name):
-        cursor = self.connection.cursor()
-        try:
-            query = """INSERT INTO {table_name}({params}) VALUES (""".format(
-                table_name = table_name,
-                params = ", ".join(keys))
-            
-            query += ", ".join([":{key}".format(key=i) for i in keys])
-            query += ")"
-
-            cursor.executemany(query, generator)
-            #self.connection.commit()
-
-        except Error as e:
-            logging.error("Exception in _insert_generator")
-            logging.error(e)
-            return False
-        finally:
-            cursor.close()
-
-        return True
-    
     @staticmethod
     def generator_wrap(generator, dict):
         for index, i in generator:
