@@ -96,7 +96,7 @@ def main(stonks, data_dir, MODEL_DIR=MODEL_DIR, date=None, prev_10=False):
         not_processed = []
         curr_date = str(curr_date.date())
         logging.info("Day %d date: %s" % (index+1, curr_date))
-        for index, (symbol, name, keywords) in tqdm(df[['Symbol', 'Company Name', 'keywords']].iterrows(), total=len(df)):
+        for index, (symbol, name, keywords) in tqdm(df[['Symbol', 'Company_Name', 'keywords']].iterrows(), total=len(df)):
             try:
                 # Articles df containing newsapi output
                 articles = pd.DataFrame(api.get_topn(keywords, curr_date))[

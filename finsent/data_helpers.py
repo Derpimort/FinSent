@@ -126,12 +126,12 @@ class StonkData(BaseData):
             if symbol is not None and symbol != "":
                 stock_row = self.stocks[self.stocks['Symbol'].str.contains(symbol)].iloc[0]
             elif name is not None and name != "":
-                stock_row = self.stocks[self.stocks['Company Name'].str.contains(name)].iloc[0]
+                stock_row = self.stocks[self.stocks['Company_Name'].str.contains(name)].iloc[0]
             else:
                 stock_row = self.stocks.iloc[0]
 
             self.symbol = stock_row['Symbol']
-            self.name = stock_row['Company Name']
+            self.name = stock_row['Company_Name']
 
             self.updated = True
             
