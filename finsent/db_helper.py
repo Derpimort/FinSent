@@ -93,4 +93,70 @@ class BaseDB:
             cursor.close()
 
         return True
+    
+    def _execute_select_query(self, query, data):
+        cursor = self.connection.cursor()
+        res = None
+        try:
+            cursor.execute(query, data)
+            field_names = [i[0] for i in cursor.description]
+            res = cursor.fetchall()
+        except Error as e:
+            logging.error("Exception in _execute_select_query")
+            logging.error(e)
+        finally:
+            cursor.close()
 
+        return res, field_names
+    
+    def _pandafy_select(self, query, query_data=None):
+        query_data = () if query_data is None else query_data
+
+        data, columns = self._execute_select_query(query, query_data)
+
+        df = pd.DataFrame(data, columns=columns)
+
+        return df
+    
+class DataDB(BaseDB):
+    def __init__(self, data_dir = DATA_DIR):
+        super().__init__(data_dir)
+    
+    def _init_connection(self, dbname="stonks.db"):
+        try:
+            self.connection = sqlite3.connect(os.path.join(self.data_dir, dbname), check_same_thread=False)
+        except Error as e:
+            logging.error("Exception in DB connect")
+            logging.error(e)
+
+    def get_init_stonks(self):
+        query = "SELECT * FROM stonks_static"
+        return self._pandafy_select(query)
+    
+    def get_init_dfs(self):
+        query = "SELECT DISTINCT(date) AS date FROM stonks"
+        return self._pandafy_select(query)['date'].sort_values().to_list()
+    
+    def daily_get_df(self, date):
+        query = "SELECT * FROM stonks WHERE date=?"
+        query_data = (date,)
+        return self._pandafy_select(query, query_data).drop('date', axis=1)
+
+    def stonk_get_full_df(self, symbol):
+        query = "SELECT date AS Date, avg_sentiment_score AS Score, positive, neutral, negative FROM stonks WHERE Symbol=?"
+        query_data = (symbol,)
+        return self._pandafy_select(query, query_data)
+
+    def stonk_article_df(self, symbol, date):
+        query = "SELECT * FROM articles WHERE date=? AND Symbol=?"
+        query_data = (date, symbol, )
+        return self._pandafy_select(query, query_data).drop(['date', 'Symbol'], axis=1)
+
+if __name__=="__main__":
+    db_helper = DataDB()
+    #print(db_helper.get_init_dfs())
+    #print(db_helper.get_init_stonks())
+    #print(db_helper.daily_get_df("2021-11-01"))
+
+
+        
