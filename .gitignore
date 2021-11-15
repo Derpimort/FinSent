@@ -1,7 +1,8 @@
-/data/Old
+/data/
+
 /finBERT/
 models/
-*.key
+*.key*
 test*
 
 

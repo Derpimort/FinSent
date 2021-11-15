@@ -1,0 +1,146 @@
+.darker-container{
+    text-align: center;
+    background: #1e1e1e;
+    padding: 10px;
+    height: 100%;
+    position: fixed;
+}
+
+.darker-container button{
+    padding: 0px 10px 0px 10px;
+}
+
+.darker-container h4{
+    margin-top: 5%;
+    text-decoration: underline;
+}
+
+.darker-res-container{
+    border: 2px dashed #444;
+    border-radius: 5px;
+    margin: 40px auto;
+    width: 90%;
+    height: 200px;
+    padding-top: 20px;
+}
+
+.darker-res-container:hover{
+    border-color: #f44336;
+}
+
+.dark-container{
+    text-align: center;
+    background: #2f2f2f;
+    padding: 10px;
+    height: 100%;
+    height: 100vh;
+    padding-top: 50px;
+}
+
+.left-border{
+    border-left: 1px solid #1e1e1e;
+    padding-left: 4px;
+}
+.top-border{
+    border-top: 1px solid #1e1e1e;
+    padding-top: 4px;
+    margin-left: 0%;
+}
+.right-border{
+    border-right: 1px solid #1e1e1e;
+    padding-right: 4px;
+}
+
+.navbar{
+    background-color:#26272b;
+    padding:16px;
+    font-size:16px;
+    line-height:24px;
+    color:#ae966d;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.navbar p
+{
+    text-decoration: underline;
+}
+
+.graph-section{
+    background-color: #1e1e1e;
+    border: 1px solid #ae966d;
+    border-radius: 10px;
+    padding: 16px;
+}
+
+.graph-section h2{
+    background-color: #1e1e1e;
+    text-align: left;
+    font-weight: bold;
+    margin: 1.8rem 1.2rem;
+    color:#ae966d;
+    padding: 4px;
+    box-shadow: 0px 2px 2px -2px;
+}
+
+.m-4{
+    margin: 4px;
+}
+.ml-4{
+    margin-left: 4px;
+}
+.mr-4{
+    margin-right: 4px;
+}
+.mt-4{
+    margin-top: 4px;
+}
+.mb-4{
+    margin-bottom: 4px;
+}
+
+.m-16{
+    margin: 16px;
+}
+.ml-16{
+    margin-left: 16px;
+}
+.mr-16{
+    margin-right: 16px;
+}
+.mt-16{
+    margin-top: 16px;
+}
+.mb-16{
+    margin-bottom: 16px;
+}
+
+
+.metric-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+.metric-row:hover{
+    background-color: #2f2f2f;
+}
+
+.submit-button{
+    display: inline-block;
+    padding: 0 20px;
+    color: #ffffff;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 300;
+    letter-spacing: .1rem;
+    line-height: normal;
+    text-transform: none;
+    text-decoration: none;
+    white-space: nowrap;
+    border-radius: 4px;
+    cursor: pointer;
+    box-sizing: border-box;
+    width: 100%;
+}

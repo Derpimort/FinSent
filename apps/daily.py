@@ -4,274 +4,105 @@
  @author: Derpimort
 """
 
-
-import os
-import dash
-from dash.dependencies import Input, Output
-import dash_table
+from dash.exceptions import PreventUpdate
+from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
 import dash_html_components as html
-import plotly.express as px
-import plotly.graph_objects as go
-import pandas as pd
-import numpy as np
-from finsent.constants import DATA_DIR, STOCKS_DIR
+from finsent.constants import DATA_DIR, STOCKS_DIR, DAILY_COLUMNS
 
 from app import app
+from finsent.data_helpers import DailyData
+from finsent.plot_helpers import DailyPlots
 
 
-def get_df(df, prev_df=None):
-    """ Return df with delta metrics if prev_df is not None """
-    df = pd.read_csv(os.path.join(STOCKS_DIR, "%s.csv" % df))
-
-    if prev_df:
-        prev_df = pd.read_csv(os.path.join(STOCKS_DIR, "%s.csv" % prev_df))
-
-        # Get stock industries
-        stocks = pd.read_csv(DATA_DIR+"ind_nifty_selected.csv")
-        df = stocks[['Symbol','Industry']].merge(df, on="Symbol")
-
-        # Compare last 2 scores to get delta
-        df = df.merge(prev_df.set_index('Symbol')[
-                      'avg_sentiment_score'], on='Symbol')
-        df['delta'] = ((df['avg_sentiment_score_x'] -
-                        df['avg_sentiment_score_y'])/df['avg_sentiment_score_x'])*100
-        df = df.drop('avg_sentiment_score_y', axis=1)
-        df['delta_status'] = df['delta'].apply(
-            lambda x: 'Increased' if x > 0 else 'Stable' if x == 0 else 'Decreased')
-
-    return df
-
-
-def empty_plot(label_annotation):
-    '''
-    Returns an empty plot with a centered text.
-    '''
-
-    trace1 = go.Scatter(
-        x=[],
-        y=[]
-    )
-
-    data = [trace1]
-
-    layout = go.Layout(
-        showlegend=False,
-        xaxis=dict(
-            autorange=True,
-            showgrid=False,
-            zeroline=False,
-            showline=False,
-            ticks='',
-            showticklabels=False
-        ),
-        yaxis=dict(
-            autorange=True,
-            showgrid=False,
-            zeroline=False,
-            showline=False,
-            ticks='',
-            showticklabels=False
-        ),
-        annotations=[
-            dict(
-                x=0,
-                y=0,
-                xref='x',
-                yref='y',
-                text=label_annotation,
-                showarrow=True,
-                arrowhead=7,
-                ax=0,
-                ay=0
-            )
-        ]
-    )
-
-    fig = go.Figure(data=data, layout=layout)
-    # END
-    return fig
-
-
-def delta_bar_chart(df):
-    colors = {
-        'Increased': "#55a868",
-        'Decreased': "#c44e52",
-        'Stable': "#000000"
-    }
-    fig = px.bar(df,
-                 y='Symbol',
-                 x='delta',
-                 color='delta_status',
-                 orientation='h',
-                 color_discrete_map=colors)
-    fig.update_yaxes(categoryorder="total ascending")
-    return fig
-
-
-# Get all data files
-dfs = []
-for file in os.listdir(STOCKS_DIR):
-    if file.endswith("csv"):
-        dfs.append(file.split(".")[0])
-dfs.sort()
-dfs_pd = pd.to_datetime(dfs).astype(np.int64)
-df = None
-
-
-# Bar chart depicting stock sentiment delta
-fig = None
-
-if len(dfs) == 0:
-    print("No csv files found, Please run main.py atleast once before running dashboards")
-    exit(0)
-elif len(dfs) < 2:
-    print("Only one csv found, delta metrics won't be available")
-    df = get_df(dfs[-1])
-    fig = empty_plot("Delta bar chart")
-else:
-    df = get_df(dfs[-1], dfs[-2])
-    fig = delta_bar_chart(df)
-
+daily_helper = DailyData(data_dir=DATA_DIR, stonks_dir=STOCKS_DIR, use_sqlite=True)
+daily_plot_helper = DailyPlots(daily_helper.df)
 
 layout = html.Div([
-    dash_table.DataTable(
-        id='datatable-interactivity',
-        columns=[
-            {"name": i, "id": i, "deletable": True, "selectable": True} for i in df.columns
-        ],
-        data=df.to_dict('records'),
-        editable=True,
-        filter_action="native",
-        sort_action="native",
-        sort_mode="multi",
-        column_selectable="single",
-        row_selectable="multi",
-        row_deletable=True,
-        selected_columns=[],
-        selected_rows=[],
-        page_action="native",
-        page_current=0,
-        page_size=10,
-    ),
     html.Div([
-        dcc.Slider(
-            id='date-slider',
-            min=dfs_pd.min(),
-            max=dfs_pd.max(),
-            value=dfs_pd.max(),
-            marks={(i): {'label': pd.to_datetime(i).strftime(
-                '%d-%m'), "style": {"transform": "rotate(45deg)"}} for i in dfs_pd[1::(len(dfs_pd)//20)+1]},
-            step=None
-        )
-    ]),
-    html.Br(),
-    html.Br(),
-    html.Br(),
-    html.Div(id='datatable-interactivity-container'),
-    dcc.Loading(
-        id='loading-graphs-main',
-        children=[
+        html.Div([
             html.Div([
-                dcc.Graph(id='delta_bar_chart', figure=fig)
+                #html.P("Select Date"),
+                dcc.Dropdown(
+                    id='daily-filter-date',
+                    options=[{'value': i, 'label':i} for i in daily_helper.get_dates()],
+                    placeholder="Select Comparison Date"
+                )
+            ], className="six columns"),
+            html.Div([
+                #html.P("Select Stocks (Upto 10)"),
+                dcc.Dropdown(
+                    id='daily-filter-stocks',
+                    options=daily_helper.get_stonks_dict(),
+                    multi=True,
+                    placeholder="Select Stocks (upto 10)"
+                )
+            ], className="six columns"),
+        ], className="row"),
+        html.Div([
+            html.Div([
+                html.Button("Show me Da Powaa!", id='daily-filter-submit', n_clicks=0, className="submit-button mt-16"),
+            ], className="twelve columns")
+        ], className="row")
+    ], className="navbar top-border"),
+    html.Div([
+        html.Div([
+            html.H2("Delta Chart"),
+            dcc.Loading([
+                html.Div([
+                    dcc.Graph(id="delta-bar-chart", figure=daily_plot_helper.empty_plot())           
+                ])
             ])
-        ]
-    )
+        ], className="six columns graph-section"),
+        html.Div([
+            html.H2("Scatter 3D"),
+            dcc.Loading([
+                html.Div([
+                    dcc.Graph(id="scatter-3d-chart", figure=daily_plot_helper.empty_plot())           
+                ])
+            ])
+        ], className="six columns graph-section"),
+    ], className="row m-4 mt-16"),
+    html.Div([
+            html.H2("Stock data"),
+            daily_plot_helper.generate_stock_header(),
+            dcc.Loading([
+                html.Div([
+                    dcc.Graph(figure=daily_plot_helper.empty_plot()) 
+                ], id="daily-stock-data-table")
+            ]),
+    ], className="top-border left-border right-border graph-section m-4 mt-16 mb-16", id="daily-stock-data-container", )
 ])
 
+@app.callback(
+    [Output('delta-bar-chart', 'figure'),
+    Output('daily-stock-data-table', 'children'),
+    Output('scatter-3d-chart', 'figure')],
+    [Input('daily-filter-submit', 'n_clicks')],
+    [State('daily-filter-stocks', 'value'),
+    State('daily-filter-date', 'value')])
+def update_charts(n_clicks, dropdown, daterange):
+    if n_clicks==0 or dropdown is None or daterange is None or len(dropdown)>10:
+        raise PreventUpdate("Invalid selection")
+    df = daily_helper.get_df(*daterange.split(" -> "))
+    daily_plot_helper.update_instance(df, dropdown)
+
+    return (
+        daily_plot_helper.get_delta_bar(), 
+        daily_plot_helper.get_stock_rows(), 
+        daily_plot_helper.get_scatter_3d()
+    )
 
 @app.callback(
-    [Output('datatable-interactivity', 'data'),
-     Output('delta_bar_chart', 'figure')],
-    [Input('date-slider', 'value')]
+    Output("daily-filter-stocks", "options"),
+    Input("daily-filter-date", "value")
 )
-def update_table(selected_date):
-    """ Update dashboard according to selected date """
-    selected_date = str(pd.to_datetime(selected_date).date())
-    selected_index = dfs.index(selected_date)
-    df = get_df(dfs[selected_index], dfs[selected_index-1])
-    fig = delta_bar_chart(df)
-    return df.to_dict('records'), fig
-
-
-@app.callback(
-    Output('datatable-interactivity', 'style_data_conditional'),
-    [Input('datatable-interactivity', 'selected_columns')]
-)
-def update_styles(selected_columns):
-    return [{
-        'if': {'column_id': i},
-        'background_color': '#D2F3FF'
-    } for i in selected_columns]
-
-
-@app.callback(
-    Output('datatable-interactivity-container', "children"),
-    [Input('datatable-interactivity', "derived_virtual_data"),
-     Input('datatable-interactivity', "derived_virtual_selected_rows")])
-def update_graphs(rows, derived_virtual_selected_rows):
-    # When the table is first rendered, `derived_virtual_data` and
-    # `derived_virtual_selected_rows` will be `None`. This is due to an
-    # idiosyncrasy in Dash (unsupplied properties are always None and Dash
-    # calls the dependent callbacks when the component is first rendered).
-    # So, if `rows` is `None`, then the component was just rendered
-    # and its value will be the same as the component's dataframe.
-    # Instead of setting `None` in here, you could also set
-    # `derived_virtual_data=df.to_rows('dict')` when you initialize
-    # the component.
-    if derived_virtual_selected_rows is None:
-        derived_virtual_selected_rows = []
-
-    dff = df if rows is None else pd.DataFrame(rows)
-
-    colors = ['#7FDBFF' if i in derived_virtual_selected_rows else '#0074D9'
-              for i in range(len(dff))]
-    graphs = []
-    index = 0
-    N_COLS = 6
-    N_COLS_str = "two"  # 12//N_COLS
-    current_row = []
-    # ["Industry", "negative", "neutral", "positive", "articles", "avg_sentiment_score_x", 'delta']
-    for column in ["negative", "neutral", "positive", "articles", "avg_sentiment_score_x", 'delta']:
-        if column in dff:
-            if index % N_COLS == 0 and index != 0:
-                row = html.Div(
-                    current_row[index-N_COLS:index], className="row")
-                graphs.append(row)
-
-            current_row.append(
-                html.Div([
-                    dcc.Graph(
-                        id=column,
-                        figure={
-                            "data": [
-                                {
-                                    "x": dff["Symbol"],
-                                    "y": dff[column],
-                                    "type": "bar",
-                                    "marker": {"color": colors},
-                                }
-                            ],
-                            "layout": {
-                                "xaxis": {"automargin": True},
-                                "yaxis": {
-                                    "automargin": True,
-                                    "title": {"text": column}
-                                },
-                                "height": 250,
-                                "margin": {"t": 10, "l": 10, "r": 10},
-                            },
-                        },
-                    )
-                ], className="%s columns" % N_COLS_str)
-
-            )
-            index += 1
-    if not graphs:
-        row = html.Div(current_row[index-N_COLS:index], className="row")
-        graphs.append(row)
-    return graphs
-
+def update_stocks(daterange):
+    if daterange is None:
+        raise PreventUpdate("Date range not selected")
+    daily_helper.get_df(*daterange.split(" -> "))
+    
+    return daily_helper.get_stonks_dict()
 
 if __name__ == '__main__':
     app.layout = layout

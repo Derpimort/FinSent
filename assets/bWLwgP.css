@@ -40,7 +40,7 @@
   width: 100%;
   max-width: 960px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 20px 0 0;
   box-sizing: border-box; }
 .column,
 .columns {
@@ -79,6 +79,7 @@
   .ten.columns                    { width: 82.6666666667%; }
   .eleven.columns                 { width: 91.3333333333%; }
   .twelve.columns                 { width: 100%; margin-left: 0; }
+  .oneh.columns                   { width: 6.0%;}
 
   .one-third.column               { width: 30.6666666667%; }
   .two-thirds.column              { width: 65.3333333333%; }
@@ -132,7 +133,10 @@ body {
   line-height: 1.6;
   font-weight: 400;
   font-family: "Open Sans", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  color: rgb(50, 50, 50); }
+  color: #ffffff; 
+  background-color: #2f2f2f;
+  margin: 0;}
+
 
 
 /* Typography
@@ -166,11 +170,11 @@ blockquote {
 /* Links
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 a {
-  color: #1EAEDB; 
+  color: #ae966d; 
   text-decoration: underline;
   cursor: pointer;}
 a:hover {
-  color: #0FA0CE; }
+  color: #FFF; }
 
 
 /* Buttons
@@ -183,7 +187,7 @@ input[type="button"] {
   display: inline-block;
   height: 38px;
   padding: 0 30px;
-  color: #555;
+  color: #ffffff;
   text-align: center;
   font-size: 11px;
   font-weight: 600;
@@ -192,9 +196,9 @@ input[type="button"] {
   text-transform: uppercase;
   text-decoration: none;
   white-space: nowrap;
-  background-color: transparent;
+  background-color: #252526;
   border-radius: 4px;
-  border: 1px solid #bbb;
+  border: 1px solid #8b7857;
   cursor: pointer;
   box-sizing: border-box; }
 .button:hover,
@@ -207,7 +211,7 @@ button:focus,
 input[type="submit"]:focus,
 input[type="reset"]:focus,
 input[type="button"]:focus {
-  color: #333;
+  background-color: #ae966d;
   border-color: #888;
   outline: 0; }
 .button.button-primary,
@@ -216,8 +220,8 @@ input[type="submit"].button-primary,
 input[type="reset"].button-primary,
 input[type="button"].button-primary {
   color: #FFF;
-  background-color: #33C3F0;
-  border-color: #33C3F0; }
+  background-color: #ae966d;
+  border-color: #ae966d; }
 .button.button-primary:hover,
 button.button-primary:hover,
 input[type="submit"].button-primary:hover,
@@ -229,8 +233,8 @@ input[type="submit"].button-primary:focus,
 input[type="reset"].button-primary:focus,
 input[type="button"].button-primary:focus {
   color: #FFF;
-  background-color: #1EAEDB;
-  border-color: #1EAEDB; }
+  background-color: #8b7857;
+  border-color: #8b7857; }
 
 
 /* Forms
@@ -247,7 +251,7 @@ select {
   height: 38px;
   padding: 6px 10px; /* The 6px vertically centers text on FF, ignored by Webkit */
   background-color: #fff;
-  border: 1px solid #D1D1D1;
+  border: 1px solid #8b7857;
   border-radius: 4px;
   box-shadow: none;
   box-sizing: border-box; 
@@ -278,7 +282,7 @@ input[type="url"]:focus,
 input[type="password"]:focus,
 textarea:focus,
 select:focus {
-  border: 1px solid #33C3F0;
+  border: 1px solid #8b7857;
   outline: 0; }
 label,
 legend {
@@ -324,7 +328,7 @@ th:not(.CalendarDay),
 td:not(.CalendarDay) {
   padding: 12px 15px;
   text-align: left;
-  border-bottom: 1px solid #E1E1E1; }
+  border-bottom: 1px solid #8b7857; }
 th:first-child:not(.CalendarDay),
 td:first-child:not(.CalendarDay) {
   padding-left: 0; }
