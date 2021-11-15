@@ -29,6 +29,7 @@ from app import app
 stonk_helper = StonkData(data_dir=DATA_DIR, stonks_dir=STOCKS_DIR, use_sqlite=True)
 stonk_plot_helper = StonkPlots(*stonk_helper.get_df())
 
+
 # Dashboard components layout
 layout = html.Div(children=[
     html.Div([

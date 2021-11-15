@@ -9,6 +9,8 @@ from static_elements import footer, header
 
 server = app.server
 
+server = app.server
+
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=True),
