@@ -350,7 +350,7 @@ class StonkPlots(BasePlots):
                     None,
                     {
                         'id': prefix+"-title-%.2d"%index,
-                        'children': data.title
+                        'children': data.title if len(data.title)<64 else data.title[:64]+"..."
                     },
                     {
                         'id': prefix+"-url-%.2d"%index,
