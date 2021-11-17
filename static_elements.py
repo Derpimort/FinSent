@@ -8,7 +8,7 @@ HEADERS = {
     
 }
 
-LOGO = app.get_asset_url('Spacebar_logo_circle.png')
+LOGO = app.get_asset_url('timeline_logo.png')
 
 # Epic guy -> https://codepen.io/scanfcode/pen/MEZPNd
 footer = html.Footer([
